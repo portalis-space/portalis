@@ -62,7 +62,7 @@ export class EventsService {
       ...constructedDto,
     });
     const event = await newEvent.save({ validateBeforeSave: true });
-
+    this.eventSceduler(event);
     return transformer(BaseViewmodel, circularToJSON(event));
   }
 
