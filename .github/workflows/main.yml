@@ -27,7 +27,7 @@ jobs:
       # Step 3: Build the Docker image
       - name: Build Docker image
         run: |
-          docker build -t {{ env.IMAGE_TAG }} .
+          docker build -t ${{ env.IMAGE_TAG }} .
 
       - name: Login TKE Registry
         run: |
