@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Post,
   Query,
   UseInterceptors,
@@ -46,6 +48,7 @@ export class TicketsController {
 
   @Post('scan-ticket')
   @UseInterceptors(new ResponseInterceptor('ticket'))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async scanTicket(
     @Body() dto: ScanTicketQrDto,
     @GetCurrentUser('username') username: string,

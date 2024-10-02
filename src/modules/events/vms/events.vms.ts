@@ -101,4 +101,8 @@ export class EventsVms extends BaseViewmodel {
   @Expose({ groups: ['DETAIL'] })
   @Type(() => CollectionViewModel)
   contractAddresses: CollectionViewModel[];
+
+  @ApiProperty()
+  @Expose()
+  status: string;
 }

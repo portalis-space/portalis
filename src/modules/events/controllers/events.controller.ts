@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -45,5 +46,14 @@ export class EventsController {
   @Get(':id')
   async getDetail(@Param('id') id: string) {
     return this.service.detail(id);
+  }
+
+  @UseInterceptors(new ResponseInterceptor('event'))
+  @Delete(':id')
+  async deleteEvent(
+    @Param('id') id: string,
+    @GetCurrentUser('_id') userId: string,
+  ) {
+    return this.service.destroy(id, userId);
   }
 }

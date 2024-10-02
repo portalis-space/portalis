@@ -113,7 +113,9 @@ export class EventsService {
         );
       }
     }
+    // this.logger.debug(owner, this.encriptor.decrypt(owner));
     const pagination = new basePagination(page, size);
+    // this.logger.debug(owner);
     let whereQ: RootFilterQuery<Event> = {
       ...(isHighlighted && { isHighlighted }),
       deletedAt: null,
@@ -122,9 +124,10 @@ export class EventsService {
       }),
       ...(contractAddress.length > 0 && { contractAddresses: contractAddress }),
       ...(status && { status }),
-      ...(scannerEvent && { scanners: username }),
+      ...(scannerEvent && { scanners: [username] }),
     };
-    this.logger.debug(whereQ);
+
+    // this.logger.debug(whereQ);
     // if (eligibleEvent) {
     //   const eligibleCollection;
     //   const collections = await this.collection.find({ contract_address: [] });
@@ -212,10 +215,13 @@ export class EventsService {
   }
 
   async destroy(id: string, owner: string) {
-    const event = await this.event.findOneAndDelete({
-      _id: new mongoose.Types.ObjectId(id),
-      owner: new mongoose.Types.ObjectId(owner),
-    });
+    const event = await this.event.findOneAndUpdate(
+      {
+        _id: new mongoose.Types.ObjectId(id),
+        owner: new mongoose.Types.ObjectId(owner),
+      },
+      { deletedAt: new Date() },
+    );
     return transformer(BaseViewmodel, circularToJSON(event));
   }
 
@@ -291,12 +297,15 @@ export class EventsService {
     this.eventQue.add(
       'activate',
       { id: event._id },
-      { ...(startDelay > 0 && { delay: startDelay }) },
+      {
+        ...(startDelay > 0 && { delay: startDelay }),
+        jobId: event._id.toString(),
+      },
     );
     this.eventQue.add(
       'deactivate',
       { id: event._id },
-      { ...(endDelay > 0 && { delay: endDelay }) },
+      { ...(endDelay > 0 && { delay: endDelay }), jobId: event._id.toString() },
     );
   }
 }

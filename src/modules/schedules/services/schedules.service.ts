@@ -182,12 +182,12 @@ export class SchedulesService {
     this.scheduleQue.add(
       'start',
       { id: schedule.id },
-      { ...(startDelay > 0 && { delay: startDelay }) },
+      { ...(startDelay > 0 && { delay: startDelay }), jobId: schedule.id },
     );
     this.scheduleQue.add(
       'end',
       { id: schedule.id },
-      { ...(endDelay > 0 && { delay: endDelay }) },
+      { ...(endDelay > 0 && { delay: endDelay }), jobId: schedule.id },
     );
   }
 }

@@ -29,6 +29,7 @@ import { ConfigService } from '@nestjs/config';
 import { MetaEncryptorService } from '@utils/helpers/meta-encryptor/meta-encryptor.service';
 import { User } from '@config/dbs/user.model';
 import { Participant } from '@config/dbs/participant.model';
+import { ValidityCheckTypeEnum } from '@utils/enums/validity.enum';
 
 @Injectable()
 export class TicketsService {
@@ -50,7 +51,11 @@ export class TicketsService {
 
   async createTicket(dto: CreateTicketDto, userId: string) {
     const { contractAddress, event, token, walletAddress, chain, type } = dto;
-    const validityCheck = await this.validiyCheck(dto, userId);
+    const validityCheck = await this.validiyCheck(
+      dto,
+      userId,
+      ValidityCheckTypeEnum.GENERATE_TICKET,
+    );
     if (!validityCheck.valid)
       throw new UnprocessableEntityException(validityCheck.message);
 
@@ -127,6 +132,7 @@ export class TicketsService {
         walletAddress: ticketData.walletAddress,
       },
       ticketData.owner,
+      ValidityCheckTypeEnum.GENERATE_TICKET_QR,
     );
     if (!validityCheck.valid)
       throw new UnprocessableEntityException(validityCheck.message);
@@ -159,7 +165,7 @@ export class TicketsService {
       qrData.split(':');
     const dateNow = getUnixTime(new Date());
     if (dateNow > +expireAt) {
-      throw new UnprocessableEntityException(`Ticket already expired`);
+      throw new UnprocessableEntityException(`Ticket QR already expired`);
     }
     const ticketData = await this.ticketModel.findOne({
       _id: new mongoose.Types.ObjectId(ticketId),
@@ -172,6 +178,10 @@ export class TicketsService {
     ) {
       throw new UnprocessableEntityException('Invalid QR Code, QR malformed');
     }
+    if (ticketData.status != TicketStatusEnum.AVAILABLE)
+      throw new UnprocessableEntityException(
+        'Ticket cant be used, invalid ticket or ticket already used',
+      );
     const validityCheck = await this.validiyCheck(
       {
         chain: ticketData.chain,
@@ -182,6 +192,7 @@ export class TicketsService {
         walletAddress: ticketData.walletAddress,
       },
       ticketData.owner,
+      ValidityCheckTypeEnum.SCAN_TICKET_QR,
       scannerUser,
     );
     if (!validityCheck.valid)
@@ -207,7 +218,8 @@ export class TicketsService {
   private async validiyCheck(
     dto: CreateTicketDto,
     userId: string,
-    scanneUser?: string,
+    validityCheckType: ValidityCheckTypeEnum,
+    scannerUser?: string,
   ) {
     const { contractAddress, event, token, walletAddress, chain, type } = dto;
     const now = new Date();
@@ -233,10 +245,7 @@ export class TicketsService {
       response.message = 'Invalid Event';
       return response;
     }
-    if (scanneUser && eventData.scanners.includes(scanneUser)) {
-      response.message = 'Invalid Scanner';
-      return response;
-    }
+
     const populatedEvent = await this.eventModel.populate(eventData, [
       {
         path: 'schedules',
@@ -246,7 +255,21 @@ export class TicketsService {
         path: 'contractAddresses',
         match: { contract_address: contractAddress },
       },
+      {
+        path: 'owner',
+        // match: { contract_address: contractAddress },
+      },
     ]);
+    this.logger.debug(eventData.owner);
+    if (
+      validityCheckType == ValidityCheckTypeEnum.SCAN_TICKET_QR &&
+      !eventData.scanners.includes(scannerUser) &&
+      (eventData.owner as unknown as User).username == scannerUser
+    ) {
+      // this.logger.debug(eventData.scanners, scannerUser);
+      response.message = 'Invalid Scanner';
+      return response;
+    }
     response.event = populatedEvent;
     // this.logger.debug({ populatedEvent });
     if (populatedEvent.schedules.length < 1) {
@@ -258,9 +281,11 @@ export class TicketsService {
     ).find(
       sched =>
         sched.status == StatusEnum.ACTIVE &&
-        sched.startAt >= now &&
-        sched.endAt <= now,
+        sched.startAt <= now &&
+        sched.endAt >= now,
     );
+    // this.logger.debug(populatedEvent.schedules);
+    // this.logger.debug(response.activeSchedule);
     if (populatedEvent.contractAddresses.length < 1) {
       response.message = 'Invalid Contract Address';
       return response;
@@ -275,14 +300,22 @@ export class TicketsService {
         response.message = 'Invalid Nft';
         return response;
       }
-      if (tickets >= +nft.amount) {
+      if (
+        validityCheckType == ValidityCheckTypeEnum.GENERATE_TICKET &&
+        tickets >= +nft.amount
+      ) {
         response.message = 'Nft Already Used';
         return response;
       }
     }
     if (type == ChainsTypeEnum.TON) {
       const nft = await this.nftScanTonService.getSingleNft(token);
-      if (!nft || nft.owner != walletAddress || tickets > 0) {
+      if (
+        !nft ||
+        nft.owner != walletAddress ||
+        (validityCheckType == ValidityCheckTypeEnum.GENERATE_TICKET &&
+          tickets) > 0
+      ) {
         response.message = 'Invalid Nft';
         return response;
       }
