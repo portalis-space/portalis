@@ -45,6 +45,6 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          ssh -i ec2_key.pem ${{ env.EC2_USERNAME }}@${{ env.EC2_HOST }} << 'EOF'
-            /home/ubuntu/deploy.sh
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ env.EC2_USERNAME }}@${{ env.EC2_HOST }} << 'EOF'
+            ~/home/ubuntu/deploy.sh
           EOF
