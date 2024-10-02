@@ -27,7 +27,7 @@ jobs:
       # Step 3: Build the Docker image
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.IMAGE_TAG }} .
+          docker build -q -t ${{ env.IMAGE_TAG }} .
 
       - name: Login Registry
         run: |
@@ -46,5 +46,5 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ env.EC2_USERNAME }}@${{ env.EC2_HOST }} << 'EOF'
-            deploy.sh
+            /deploy.sh
           EOF
