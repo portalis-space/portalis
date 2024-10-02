@@ -1,0 +1,94 @@
+# trigger ci
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${CLUSTER_NAMESPACE}-${SERVICE_NAME}-${CI_ENV}
+  namespace: $CLUSTER_NAMESPACE
+spec:
+  replicas: ${CI_REPLICA_SET}
+  selector:
+    matchLabels:
+      app: ${CLUSTER_NAMESPACE}-${SERVICE_NAME}-${CI_ENV}
+  template:
+    metadata:
+      labels:
+        app: ${CLUSTER_NAMESPACE}-${SERVICE_NAME}-${CI_ENV}
+    spec:
+      imagePullSecrets:
+        - name: ${CI_PULL_SECRET}
+      restartPolicy: Always
+      containers:
+        - name: ${CLUSTER_NAMESPACE}-${SERVICE_NAME}-${CI_ENV}-instance
+          image: ${DOCKER_IMAGE}
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: ${SERVICE_NAME}-${CI_ENV}-env
+          ports:
+            - name: http
+              containerPort: ${CI_HTTP_PORT}
+            # - name: grpc
+            #   protocol: TCP
+            #   containerPort: ${CI_GRPC_PORT}
+            # - name: ws
+            #   protocol: TCP
+            #   containerPort: ${CI_WS_PORT}
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${CLUSTER_NAMESPACE}-${SERVICE_NAME}-${CI_ENV}-svc
+  namespace: $CLUSTER_NAMESPACE
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: ${CI_HTTP_PORT}
+    # - name: grpc
+    #   protocol: TCP
+    #   port: ${CI_GRPC_PORT}
+    #   targetPort: ${CI_GRPC_PORT}
+    # - name: ws
+    #   protocol: TCP
+    #   port: ${CI_WS_PORT}
+    #   targetPort: ${CI_WS_PORT}
+  selector:
+    app: ${CLUSTER_NAMESPACE}-${SERVICE_NAME}-${CI_ENV}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${CLUSTER_NAMESPACE}-${SERVICE_NAME}-${CI_ENV}-ingress
+  namespace: $CLUSTER_NAMESPACE
+  annotations:
+    cert-manager.io/clusterissuer: cloudflare-issuer
+    kubernetes.io/ingress.class: nginx-public
+    nginx.ingress.kubernetes.io/proxy-body-size: 10g
+    # nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'
+    # nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'
+spec:
+  rules:
+    - host: be-${CLUSTER_NAMESPACE}-${CI_ENV}.nusameta.id
+      http:
+        paths:
+          - path: /${SERVICE_NAME}/api
+            pathType: Prefix
+            backend:
+              service:
+                name: ${CLUSTER_NAMESPACE}-${SERVICE_NAME}-${CI_ENV}-svc
+                port:
+                  number: 80
+          # - path: /${SERVICE_NAME}/ws
+          #   pathType: Prefix
+          #   backend:
+          #     service:
+          #       name: ${CLUSTER_NAMESPACE}-${SERVICE_NAME}-${CI_ENV}-svc
+          #       port:
+          #         number: ${CI_WS_PORT}

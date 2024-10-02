@@ -1,0 +1,139 @@
+stages:
+  # - prisma
+  - docker
+  - deploy
+  # - test
+  # - staging
+
+variables:
+  CLUSTER_NAMESPACE: $CI_NS_ENTRIPASS
+  SERVICE_NAME: $CI_SERVICE_NAME
+  REGISTRY_APP: ${REGISTRY_HOST}/${CLUSTER_NAMESPACE}
+  npm_config_cache: '${CI_PROJECT_DIR}/.npm'
+  CYPRESS_CACHE_FOLDER: '${CI_PROJECT_DIR}/cache/Cypress'
+  SECURE_FILES_DOWNLOAD_PATH: '.'
+  CI_PULL_SECRET: tcr.ipstcr-hb6vj9i1-public
+  DOCKER_IMAGE: ${REGISTRY_APP}/${SERVICE_NAME}:${CI_COMMIT_SHORT_SHA}
+
+cache:
+  key: $CI_COMMIT_REF_SLUG
+  untracked: true
+  paths:
+    - .npm
+    - cache/Cypress
+
+docker:
+  stage: docker
+  tags:
+    - linux
+    - nusameta
+    - backend
+  before_script:
+    - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
+    - if [ $CI_COMMIT_BRANCH == "main" ]; then echo "DATABASE_URL=$DB_MIGRATION_MAIN_URL" > .env; else echo "DATABASE_URL=$(grep DATABASE_URL .env.$CI_COMMIT_BRANCH | cut -d'=' -f 2-)" > .env; fi
+    - cat .env
+    - echo "$REGISTRY_PASS" | docker login be-cr.tencentcloudcr.com --username $REGISTRY_USER --password-stdin
+  script:
+    - docker build -t ${REGISTRY_APP}/${SERVICE_NAME}:${CI_COMMIT_SHORT_SHA} . && docker push ${REGISTRY_APP}/${SERVICE_NAME}:${CI_COMMIT_SHORT_SHA}
+    - if [ $CI_COMMIT_BRANCH == "main" ]; then docker tag ${REGISTRY_APP}/${SERVICE_NAME}:${CI_COMMIT_SHORT_SHA} ${REGISTRY_APP}/${SERVICE_NAME}:latest && docker push ${REGISTRY_APP}/${SERVICE_NAME}:latest; fi
+  only:
+    # - development
+    - main
+    - tags
+
+# deploy-dev:
+#   stage: deploy
+#   variables:
+#     CI_ENV: development
+#     CI_REPLICA_SET: 1
+#     DOCKER_IMAGE: ${REGISTRY_APP}/${SERVICE_NAME}:${CI_COMMIT_SHORT_SHA}
+#   tags:
+#     - linux
+#     - nusameta
+#     - backend
+#   before_script:
+#     - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
+#     - envsubst < .env.${CI_ENV} > .env
+#     - cat .env
+#     - echo "$REGISTRY_PASS" | docker login be-cr.tencentcloudcr.com --username $REGISTRY_USER --password-stdin
+#   script:
+#     - envsubst < ./kubernetes/namespace.yaml > ./kubernetes/namespace-${CI_ENV}.yaml
+#     - kubectl apply -f ./kubernetes/namespace-${CI_ENV}.yaml
+#     - kubectl create configmap ${SERVICE_NAME}-${CI_ENV}-env --save-config --dry-run=client --from-env-file=.env -n $CLUSTER_NAMESPACE -o yaml | kubectl apply -f -
+#     - envsubst < ./kubernetes/deployment.yaml > ./kubernetes/deployment-${CI_ENV}.yaml
+#     - cat ./kubernetes/deployment-${CI_ENV}.yaml
+#     - kubectl apply -f ./kubernetes/deployment-${CI_ENV}.yaml
+#   only:
+#     - development
+#   dependencies:
+#     - docker
+
+deploy-prod:
+  stage: deploy
+  tags:
+    - linux
+    - nusameta
+    - backend
+  variables:
+    CI_ENV: production
+    CI_REPLICA_SET: 1
+    # DOCKER_IMAGE: ${REGISTRY_APP}/${SERVICE_NAME}:${CI_COMMIT_SHORT_SHA}
+  before_script:
+    - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
+    - envsubst < .env.${CI_ENV} > .env
+    - echo "$REGISTRY_PASS" | docker login be-cr.tencentcloudcr.com --username $REGISTRY_USER --password-stdin
+    - kubechangeconfig -f be-kluster-${CI_ENV}-kubeconfig.yaml
+  script:
+    - envsubst < ./kubernetes/namespace.yaml > ./kubernetes/namespace-${CI_ENV}.yaml
+    - kubectl apply -f ./kubernetes/namespace-${CI_ENV}.yaml
+    - kubectl create configmap ${SERVICE_NAME}-${CI_ENV}-env --save-config --dry-run=client --from-env-file=.env -n $CLUSTER_NAMESPACE -o yaml | kubectl apply -f -
+    - envsubst < ./kubernetes/deployment.yaml > ./kubernetes/deployment-${CI_ENV}.yaml
+    - cat ./kubernetes/deployment-${CI_ENV}.yaml
+    - kubectl apply -f ./kubernetes/deployment-${CI_ENV}.yaml
+  only:
+    - main
+  dependencies:
+    - docker
+# e2e-test:
+#   image: cypress/browsers:node-20.9.0-chrome-118.0.5993.88-1-ff-118.0.2-edge-118.0.2088.46-1
+#   stage: test
+#   script:
+#     - cd test/ui
+#     - npm ci
+#     - npx cypress verify
+#     - npx cypress run --browser chrome --spec "cypress/e2e/fluentum-simple-test/*"
+#   artifacts:
+#     paths:
+#       - test/ui/cypress/screenshots
+#   only:
+#     - main
+#     - tags
+#   dependencies:
+#     - make
+#     - docker
+#     - deploy
+
+# update-staging:
+#   image: arifsetiawan/ubuntu-git-yq:20.04
+#   stage: staging
+#   script:
+#     # clone gitops repo
+#     - git clone -b gitops "https://${GITLAB_USERNAME}:${GITLAB_TOKEN}@gitlab.com/aegisdev/fluentum.git" fluentum-gitops
+#     - cd fluentum-gitops
+#     # set git user & email
+#     - git config --global user.email "gitlab-ci@fluentum.co"
+#     - git config --global user.name "Gitlab CI"
+#     # update image tag
+#     - newTag=$CI_COMMIT_SHORT_SHA yq e --inplace '.images[0].newTag |= strenv(newTag)' control-plane/fluentum/staging/kustomization.yaml
+#     # commit and push
+#     - git add .
+#     - git commit -m "update api image tag to $CI_COMMIT_SHORT_SHA"
+#     - git push origin gitops -f
+#   only:
+#     - main
+#     - tags
+#   dependencies:
+#     - make
+#     - docker
+#     - deploy
+#     - e2e-test

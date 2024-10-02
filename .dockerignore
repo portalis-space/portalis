@@ -1,0 +1,4 @@
+prisma-clients
+node_modules
+dist
+# .env*
