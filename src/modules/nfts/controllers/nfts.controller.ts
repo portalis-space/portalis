@@ -4,7 +4,10 @@ import {
   ResponseInterceptor,
   ResponsePaginationInterceptor,
 } from '@utils/interceptors';
-import { NftOwnedByWalletAddressDto } from '../dtos/nfts.dto';
+import {
+  NftByContractAddressDto,
+  NftOwnedByWalletAddressDto,
+} from '../dtos/nfts.dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Public } from 'modules/common/decorators';
 
@@ -18,5 +21,11 @@ export class NftsController {
   @UseInterceptors(new ResponsePaginationInterceptor('collection-nft'))
   async getNftsByWallet(@Query() dto: NftOwnedByWalletAddressDto) {
     return this.service.getAllOwnedNfts(dto);
+  }
+
+  @Get('by-contract')
+  @UseInterceptors(new ResponsePaginationInterceptor('nft'))
+  async getNftByContract(@Query() dto: NftByContractAddressDto) {
+    return this.service.getNftByContractAddress(dto);
   }
 }

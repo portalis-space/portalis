@@ -20,7 +20,7 @@ export class NftOwnedByWalletAddressDto extends OmitType(BaseListRequest, [
 
   @ApiProperty({ enum: chains, default: chains.ETH })
   @IsNotEmpty()
-  chain: chains;
+  chain: string;
 
   @ApiProperty({ enum: ChainsTypeEnum, default: ChainsTypeEnum.EVM })
   @IsNotEmpty()
@@ -33,4 +33,17 @@ export class NftOwnedByWalletAddressDto extends OmitType(BaseListRequest, [
   })
   @IsOptional()
   contractAddress?: string[];
+}
+
+export class NftByContractAddressDto extends OmitType(
+  NftOwnedByWalletAddressDto,
+  ['walletAddress', 'contractAddress'] as const,
+) {
+  @ApiPropertyOptional()
+  @IsOptional()
+  cursor?: string;
+
+  @ApiProperty({ default: '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d' })
+  @IsNotEmpty()
+  contractAddress: string;
 }

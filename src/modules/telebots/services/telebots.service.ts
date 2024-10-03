@@ -17,6 +17,7 @@ export class TelebotsService implements OnModuleInit {
   private logger = new Logger(TelebotsService.name);
   private FE_LOGIN_URL = this.config.get<string>('FE_LOGIN_URL');
   private TELE_BOT = this.config.get<string>('TELE_BOT');
+  private teleBots: any;
   constructor(
     private readonly config: ConfigService,
     private readonly userService: UsersService,
@@ -25,48 +26,17 @@ export class TelebotsService implements OnModuleInit {
   onModuleInit() {
     const telegramBot = require('node-telegram-bot-api');
     const telebots = new telegramBot(this.TELE_BOT, { polling: true });
-    // telebots.on('message', msg => {
-    //   let Hi = 'hi';
-    //   this.logger.debug(msg);
-    //   if (msg.text.toString().toLowerCase().indexOf(Hi) === 0) {
-    //     telebots.sendMessage(
-    //       msg.from.id,
-    //       'Hello ' +
-    //         msg.from.first_name +
-    //         ' what would you like to know about me ?',
-    //     );
-    //   }
-    // });
+    this.teleBots = telebots;
     telebots.onText(/\/start/, async msg => {
       // this.logger.debug(msg);
-      const profPic = await telebots.getUserProfilePhotos(msg.from.id);
-      const firstPhotos = (profPic.photos[0] as ITeleUserProfPic[]) || [];
-      // this.logger.debug(firstPhotos);
-      const photoSet =
-        firstPhotos?.length > 0 &&
-        (await Promise.all(
-          firstPhotos.map(async photo => {
-            const file = (await telebots.getFile(
-              photo.file_id,
-            )) as ITeleUserProfPicFile;
-            const response: CreateUserProfilePicDto = {
-              fileId: photo.file_id,
-              filePath: file.file_path,
-              fileSize: photo.file_size,
-              fileUniqueId: photo.file_unique_id,
-              height: photo.height,
-              width: photo.width,
-            };
-            return response;
-          }),
-        ));
+      const photo = await this.getUserPhoto(msg.from.id);
       const userDto: CreateUserDto = {
         chatId: msg.chat.id,
         userId: msg.from.id,
         username: msg.from.username,
         firstName: msg.from.first_name,
         lastName: msg.from.last_name,
-        profilePics: photoSet || [],
+        profilePics: photo,
       };
       // this.logger.debug(userDto);
       const user = await this.userService.createUser(userDto);
@@ -76,7 +46,7 @@ export class TelebotsService implements OnModuleInit {
           inline_keyboard: [
             [
               {
-                web_app: { url: this.FE_LOGIN_URL + `?token=${user.id}` },
+                web_app: { url: this.FE_LOGIN_URL },
                 text: 'PORTALIS',
               },
             ],
@@ -84,5 +54,21 @@ export class TelebotsService implements OnModuleInit {
         },
       });
     });
+  }
+
+  async getUserPhoto(id: string) {
+    const profPic = await this.teleBots.getUserProfilePhotos(+id);
+
+    const firstPhotos = (profPic.photos[0] as ITeleUserProfPic[]) || [];
+    // this.logger.debug(firstPhotos);
+    let photo: string;
+    if (firstPhotos.length > 1) {
+      const file = (await this.teleBots.getFile(
+        firstPhotos[0].file_id,
+      )) as ITeleUserProfPicFile;
+      this.logger.debug(file);
+      photo = `${process.env.TELE_API_URL}${process.env.TELE_BOT}/${file.file_path}`;
+    }
+    return photo;
   }
 }

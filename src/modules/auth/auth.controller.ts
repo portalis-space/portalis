@@ -25,15 +25,15 @@ import { UserVms } from 'modules/users/vms/users.vms';
 @Controller({ path: 'auth', version: '1' })
 export class AuthController {
   private logger = new Logger(AuthController.name);
-  constructor(private readonly authService: AuthService) {}
+  constructor() {}
 
-  @UseInterceptors(new ResponseInterceptor('auth'))
-  @Public()
-  @Post('signin')
-  @HttpCode(HttpStatus.OK)
-  async scannerSignin(@Body() dto: AuthDto): Promise<AuthTokenViewModel> {
-    return this.authService.signin(dto);
-  }
+  // @UseInterceptors(new ResponseInterceptor('auth'))
+  // @Public()
+  // @Post('signin')
+  // @HttpCode(HttpStatus.OK)
+  // async scannerSignin(@Body() dto: AuthDto): Promise<AuthTokenViewModel> {
+  //   return this.authService.signin(dto);
+  // }
 
   @UseInterceptors(new ResponseInterceptor('auth'))
   @ApiBearerAuth()
@@ -43,12 +43,12 @@ export class AuthController {
     return transformer(UserVms, circularToJSON(user));
   }
 
-  @UseInterceptors(new ResponseInterceptor('auth'))
-  @ApiBearerAuth()
-  @Post('refresh')
-  @HttpCode(HttpStatus.OK)
-  async refreshToken(@GetCurrentUser('_id') userId: string) {
-    this.logger.debug(userId);
-    return this.authService.refreshToken(userId);
-  }
+  // @UseInterceptors(new ResponseInterceptor('auth'))
+  // @ApiBearerAuth()
+  // @Post('refresh')
+  // @HttpCode(HttpStatus.OK)
+  // async refreshToken(@GetCurrentUser('_id') userId: string) {
+  //   this.logger.debug(userId);
+  //   return this.authService.refreshToken(userId);
+  // }
 }

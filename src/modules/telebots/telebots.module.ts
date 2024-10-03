@@ -5,5 +5,6 @@ import { UsersModule } from 'modules/users/users.module';
 @Module({
   imports: [UsersModule],
   providers: [TelebotsService],
+  exports: [TelebotsService],
 })
 export class TelebotsModule {}

@@ -70,6 +70,37 @@ export class NftScanTonService {
       return { count: nfts.length, rows: circularToJSON(pagedNft || nfts) };
     } catch (error) {
       this.logger.error(error);
+      return { count: 0, rows: [] };
+    }
+  }
+
+  async getNftByContract(
+    contractAddress: string,
+    limit?: number,
+    cursor?: string,
+  ) {
+    const url = this.TON_BASE_URL + `/ton/assets/contract/${contractAddress}`;
+    const config: AxiosRequestConfig = {
+      url,
+      headers: {
+        'X-API-KEY': this.NFTSCAN_KEY,
+      },
+      params: {
+        ...(cursor && { cursor }),
+        ...(limit && { limit }),
+      },
+      method: 'GET',
+    };
+    try {
+      const { data } = await lastValueFrom(this.http.request(config));
+      return data.data as INftScanPaginateResponse;
+    } catch (error) {
+      this.logger.error(error);
+      const response: INftScanPaginateResponse = {
+        content: [],
+        next: null,
+        total: 0,
+      };
     }
   }
 

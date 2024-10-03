@@ -32,7 +32,7 @@ export class CreateUserProfilePicDto implements ProfilePicture {
 export class CreateUserDto {
   @ApiProperty({ default: '123' })
   @IsNotEmpty()
-  chatId: string;
+  chatId?: string;
 
   @ApiProperty({ default: '123' })
   @IsNotEmpty()
@@ -52,7 +52,5 @@ export class CreateUserDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsArray({ each: true })
-  @Type(() => CreateUserProfilePicDto)
-  profilePics?: CreateUserProfilePicDto[];
+  profilePics?: string;
 }

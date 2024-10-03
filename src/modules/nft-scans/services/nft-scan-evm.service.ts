@@ -49,6 +49,24 @@ export class NftScanEvmService {
     return { count: nfts.length, rows: circularToJSON(pagedNft || nfts) };
   }
 
+  async getNftByContractAddress(
+    chain: EvmChain,
+    contractAddress: string,
+    limit?: number,
+    cursor?: string,
+  ) {
+    const nftScan = new NftscanEvm({
+      apiKey: this.NFTSCAN_KEY,
+      chain: chain,
+    });
+    const nfts = await nftScan.asset.getAssetsByContract(contractAddress, {
+      ...(limit && { limit }),
+      ...(cursor && { cursor }),
+    });
+
+    return nfts;
+  }
+
   async getNft(chain: EvmChain, contractAddress: string, tokenId: string) {
     const nftScan = new NftscanEvm({
       apiKey: this.NFTSCAN_KEY,

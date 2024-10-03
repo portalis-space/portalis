@@ -32,7 +32,7 @@ export class AtGuard implements CanActivate {
     }
 
     try {
-      const userAuth = await this.authService.validateToken(token);
+      const userAuth = await this.authService.validateTelegramToken(token);
       request['user'] = userAuth;
     } catch (error) {
       throw new UnauthorizedException();
