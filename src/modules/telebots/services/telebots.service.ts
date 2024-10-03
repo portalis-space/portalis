@@ -40,7 +40,7 @@ export class TelebotsService implements OnModuleInit {
       };
       // this.logger.debug(userDto);
       const user = await this.userService.createUser(userDto);
-      this.logger.debug(user.id);
+      this.logger.debug(user._id);
       telebots.sendMessage(msg.chat.id, 'Welcome', {
         reply_markup: {
           inline_keyboard: [

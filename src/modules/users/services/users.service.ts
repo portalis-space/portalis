@@ -16,6 +16,7 @@ export class UsersService {
       upsert: true,
       returnDocument: 'after',
     });
+    // this.logger.debug(user);
     return circularToJSON(user);
   }
 }
