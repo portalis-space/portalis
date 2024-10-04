@@ -1,3 +1,4 @@
+import { Participant } from '@config/dbs/participant.model';
 import { Ticket } from '@config/dbs/ticket.model';
 import { BaseViewmodel } from '@utils/base-class/base.viewmodel';
 import { ChainsEnum, ChainsTypeEnum } from '@utils/enums';
@@ -7,7 +8,7 @@ import { EventsVms } from 'modules/events/vms/events.vms';
 import { UserVms } from 'modules/users/vms/users.vms';
 import { EvmChain } from 'nftscan-api';
 
-export class TicketVms extends BaseViewmodel {
+export class TicketVms {
   @Expose()
   chain: string;
   @Expose()
@@ -32,4 +33,7 @@ export class TicketVms extends BaseViewmodel {
   type: string;
   @Expose()
   walletAddress: string;
+  @Expose()
+  @Type(() => UserVms)
+  scannedBy?: UserVms;
 }

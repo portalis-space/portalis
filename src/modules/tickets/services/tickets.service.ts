@@ -108,6 +108,7 @@ export class TicketsService {
     const populatedTickets = await this.ticketModel.populate(tickets, [
       { path: 'event', populate: { path: 'schedules' } },
       { path: 'owner' },
+      { path: 'scannedBy' },
     ]);
     return {
       count: count.length,
