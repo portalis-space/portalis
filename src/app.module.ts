@@ -18,6 +18,8 @@ import { UploaderModule } from 'modules/uploader/uploder.module';
 import { NftsModule } from 'modules/nfts/nfts.module';
 import { TicketsModule } from 'modules/tickets/tickets.module';
 import { ParticipantsModule } from 'modules/participants/participants.module';
+import { QuestsModule } from 'modules/quests/quests.module';
+import { ProgressQuestsModule } from 'modules/progress-quests/progress-quests.module';
 // import { AtGuard, RolesGuard } from '../modules_old/common/guards';
 // import { NftContractModule } from '../modules_old/nft-contract/nft-contract.module';
 // import { TicketModule } from '../modules_old/ticket/ticket.module';
@@ -42,6 +44,8 @@ import { ParticipantsModule } from 'modules/participants/participants.module';
     NftsModule,
     TicketsModule,
     ParticipantsModule,
+    QuestsModule,
+    ProgressQuestsModule,
     // BcChainModule,
     // NftContractModule,
     // EventNftContractModule,

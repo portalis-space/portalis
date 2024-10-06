@@ -14,6 +14,8 @@ export const resourceNames = [
   'collection-nft',
   'uploader',
   'participant',
+  'quest',
+  'progress',
 ] as const;
 
 export type Resource = (typeof resourceNames)[number];

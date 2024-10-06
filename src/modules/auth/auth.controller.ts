@@ -25,15 +25,15 @@ import { UserVms } from 'modules/users/vms/users.vms';
 @Controller({ path: 'auth', version: '1' })
 export class AuthController {
   private logger = new Logger(AuthController.name);
-  constructor() {}
+  constructor(private readonly service: AuthService) {}
 
-  // @UseInterceptors(new ResponseInterceptor('auth'))
-  // @Public()
-  // @Post('signin')
-  // @HttpCode(HttpStatus.OK)
-  // async scannerSignin(@Body() dto: AuthDto): Promise<AuthTokenViewModel> {
-  //   return this.authService.signin(dto);
-  // }
+  @UseInterceptors(new ResponseInterceptor('auth'))
+  @Public()
+  @Post('admin/signin')
+  @HttpCode(HttpStatus.OK)
+  async scannerSignin(@Body() dto: AuthDto): Promise<AuthTokenViewModel> {
+    return this.service.signinAdmin(dto);
+  }
 
   @UseInterceptors(new ResponseInterceptor('auth'))
   @ApiBearerAuth()

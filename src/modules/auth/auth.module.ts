@@ -13,16 +13,14 @@ import { TelebotsModule } from 'modules/telebots/telebots.module';
 
 @Module({
   imports: [
-    // JwtModule.registerAsync({
-    //   useFactory: async (configService: ConfigService) => ({
-    //     secret: configService.get<string>('AT_SECRET'),
-    //     signOptions: { expiresIn: configService.get<string>('AT_EXPIRE') },
-    //   }),
-    //   inject: [ConfigService],
-    // }),
+    JwtModule.registerAsync({
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('AT_SECRET'),
+        signOptions: { expiresIn: configService.get<string>('AT_EXPIRE') },
+      }),
+      inject: [ConfigService],
+    }),
     UsersModule,
-    // MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    // RedisModule,
     MetaEncryptorModule,
     TelebotsModule,
   ],

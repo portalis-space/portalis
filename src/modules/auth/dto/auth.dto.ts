@@ -6,8 +6,14 @@ import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export class AuthDto {
   @ApiProperty({
-    default: '156811268656ca1736685ea4e16a64838e4974e44cf60a44280b548843c3c1ea',
+    default: 'bedulkoflok',
   })
   @IsNotEmpty()
-  token: string;
+  username: string;
+
+  @ApiProperty({
+    default: 'asdqwe123',
+  })
+  @IsNotEmpty()
+  password: string;
 }

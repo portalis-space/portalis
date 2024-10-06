@@ -21,6 +21,7 @@ import { MetaEncryptorService } from '@utils/helpers/meta-encryptor/meta-encrypt
 import { Transform, Type } from 'class-transformer';
 import {
   ArrayMinSize,
+  Equals,
   IsArray,
   IsBoolean,
   IsBooleanString,
@@ -181,6 +182,11 @@ export class EventListDto extends BaseListRequest {
   @IsEnum(ScheduleEnum)
   status?: ScheduleEnum;
 
+  @ValidateIf(obj => obj.scannerEvent)
+  @Equals(undefined, {
+    message:
+      'owner not allowed, only 1 attribute between owner or scannerEvent allowed',
+  })
   @ApiPropertyOptional()
   @IsOptional()
   owner?: string;
