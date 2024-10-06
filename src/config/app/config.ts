@@ -13,4 +13,5 @@ export const ConfigSwagger = new DocumentBuilder()
   .setDescription('API Documentation')
   .setVersion('1.0')
   .addBearerAuth()
+  .addBearerAuth({ type: 'http', scheme: 'bearer' }, 'Admin')
   .build();

@@ -8,6 +8,8 @@ import {
   ProgressQuest,
   ProgressQuestSchema,
 } from '@config/dbs/progress-quest.model';
+import { AdmGuard } from 'modules/common/guards/adm.guard';
+import { AuthModule } from 'modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -15,6 +17,7 @@ import {
     MongooseModule.forFeature([
       { name: ProgressQuest.name, schema: ProgressQuestSchema },
     ]),
+    AuthModule,
   ],
   controllers: [QuestsController, QuestAdminController],
   providers: [QuestsService],
