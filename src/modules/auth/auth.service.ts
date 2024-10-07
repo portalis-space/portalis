@@ -72,19 +72,19 @@ export class AuthService {
 
   async validateTelegramToken(token: string) {
     const parsedToken = parse(token);
-    // if (!isValid(token, this.TELE_BOT)) {
-    //   throw new UnauthorizedException();
-    // }
-    // const userPhoto = await this.telebot.getUserPhoto(
-    //   parsedToken.user.id.toString(),
-    // );
+    if (!isValid(token, this.TELE_BOT)) {
+      throw new UnauthorizedException();
+    }
+    const userPhoto = await this.telebot.getUserPhoto(
+      parsedToken.user.id.toString(),
+    );
     const user = await this.userService.createUser({
       firstName: parsedToken.user.firstName,
       lastName: parsedToken.user.lastName,
       username: parsedToken.user.username,
       chatId: parsedToken.chat?.id.toString(),
       userId: parsedToken.user.id.toString(),
-      // profilePics: userPhoto,
+      profilePics: userPhoto,
     });
     // this.logger.debug({ user });
 
