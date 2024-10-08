@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -31,6 +32,7 @@ export class QuestAdminController {
 
   @Patch(':id')
   @Public()
+  @UseGuards(AdmGuard)
   @UseInterceptors(new ResponseInterceptor('quest'))
   updateQuest(@Param('id') id: string, @Body() dto: UpdateQuestDto) {
     return this.service.updateQuest(id, dto);
@@ -42,5 +44,21 @@ export class QuestAdminController {
   @UseInterceptors(new ResponseInterceptor('quest'))
   listQuest() {
     return this.service.listQuest();
+  }
+
+  @Delete(':id/deactivate')
+  @Public()
+  @UseGuards(AdmGuard)
+  @UseInterceptors(new ResponseInterceptor('quest'))
+  deactivateQuest(@Param('id') id: string) {
+    return this.service.deactivateQuest(id);
+  }
+
+  @Delete(':id')
+  @Public()
+  @UseGuards(AdmGuard)
+  @UseInterceptors(new ResponseInterceptor('quest'))
+  deleteQuest(@Param('id') id: string) {
+    return this.service.deleteQuest(id);
   }
 }

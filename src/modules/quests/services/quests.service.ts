@@ -41,4 +41,21 @@ export class QuestsService {
     );
     return transformer(BaseViewmodel, circularToJSON(quest));
   }
+
+  async deactivateQuest(id: string) {
+    const quest = await this.questModel.findOneAndUpdate(
+      {
+        _id: new mongoose.Types.ObjectId(id),
+      },
+      { status: StatusEnum.INACTIVE },
+    );
+    return transformer(BaseViewmodel, circularToJSON(quest));
+  }
+
+  async deleteQuest(id: string) {
+    const quest = await this.questModel.deleteOne({
+      _id: new mongoose.Types.ObjectId(id),
+    });
+    return transformer(BaseViewmodel, circularToJSON(quest));
+  }
 }

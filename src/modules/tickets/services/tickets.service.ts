@@ -13,17 +13,15 @@ import {
   ScanTicketQrDto,
 } from '../dtos/tickets.dto';
 import { TicketStatusEnum } from '@utils/enums/ticket.enum';
-import { Collection, EvmCollection } from '@config/dbs/collection.model';
 import { Event } from '@config/dbs/event.model';
 import { Schedule } from '@config/dbs/schedule.model';
 import { ChainsTypeEnum, StatusEnum } from '@utils/enums';
 import { NftScanEvmService } from 'modules/nft-scans/services/nft-scan-evm.service';
 import { NftScanTonService } from 'modules/nft-scans/services/nft-scan-ton.service';
-import { ErcType, EvmChain } from 'nftscan-api';
+import { EvmChain } from 'nftscan-api';
 import { circularToJSON, transformer } from '@utils/helpers';
 import { basePagination } from '@utils/base-class/base.paginate';
 import { TicketVms } from '../vms/tickets.vms';
-import { chains } from 'modules/chains/types/chains.type';
 import { add, getUnixTime } from 'date-fns';
 import { ConfigService } from '@nestjs/config';
 import { MetaEncryptorService } from '@utils/helpers/meta-encryptor/meta-encryptor.service';
@@ -237,7 +235,7 @@ export class TicketsService {
         event: new mongoose.Types.ObjectId(event),
         token,
         contractAddress,
-        owner: new mongoose.Types.ObjectId(userId),
+        // owner: new mongoose.Types.ObjectId(userId),
         status: [TicketStatusEnum.AVAILABLE, TicketStatusEnum.USED],
       }),
       this.eventModel.findOne({ _id: new mongoose.Types.ObjectId(event) }),
@@ -261,7 +259,7 @@ export class TicketsService {
         // match: { contract_address: contractAddress },
       },
     ]);
-    this.logger.debug(eventData.owner);
+    // this.logger.debug(eventData.owner);
     if (
       validityCheckType == ValidityCheckTypeEnum.SCAN_TICKET_QR &&
       !eventData.scanners.includes(scannerUser) &&
@@ -291,6 +289,8 @@ export class TicketsService {
       response.message = 'Invalid Contract Address';
       return response;
     }
+    // validate event capacity
+    // if(){}
     if (type == ChainsTypeEnum.EVM) {
       const nft = await this.nftScanEvmService.getNft(
         chain as unknown as EvmChain,
