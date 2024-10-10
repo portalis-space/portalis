@@ -22,6 +22,7 @@ import { MetaEncryptorModule } from '@utils/helpers/meta-encryptor';
         host: process.env.REDIS_HOST,
         port: +process.env.REDIS_PORT,
         password: process.env.REDIS_PASSWORD,
+        maxRetriesPerRequest: null,
       },
     }),
     MongooseModule.forRoot(process.env.DATABASE_URL, {
