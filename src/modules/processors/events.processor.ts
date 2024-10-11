@@ -1,10 +1,10 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ScheduleEnum, StatusEnum } from '@utils/enums';
+import { ScheduleEnum } from '@utils/enums';
 import { Event } from '@config/dbs/event.model';
 import { Job } from 'bull';
-import mongoose, { Model } from 'mongoose';
+import { Model } from 'mongoose';
 
 @Processor('event')
 export class EventsProcessor {
@@ -17,7 +17,7 @@ export class EventsProcessor {
   async eventStarted(job: Job) {
     const { id } = job.data;
     try {
-      const event = await this.eventModel.findByIdAndUpdate(id, {
+      const event = await this.eventModel.findOneAndUpdate(id, {
         status: ScheduleEnum.ONGOING,
       });
       this.logger.debug(`Event Activation success`);

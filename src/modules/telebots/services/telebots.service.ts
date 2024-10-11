@@ -40,7 +40,7 @@ export class TelebotsService implements OnModuleInit {
       };
       // this.logger.debug(userDto);
       const user = await this.userService.createUser(userDto);
-      this.logger.debug(user._id);
+      // this.logger.debug(user._id);
       telebots.sendMessage(msg.chat.id, 'Welcome', {
         reply_markup: {
           inline_keyboard: [
@@ -66,7 +66,7 @@ export class TelebotsService implements OnModuleInit {
       const file = (await this.teleBots.getFile(
         firstPhotos[0].file_id,
       )) as ITeleUserProfPicFile;
-      this.logger.debug(file);
+      // this.logger.debug(file);
       photo = `${process.env.TELE_API_URL}${process.env.TELE_BOT}/${file.file_path}`;
     }
     return photo;
