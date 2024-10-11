@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Query,
   UseInterceptors,
@@ -63,5 +64,11 @@ export class TicketsController {
     @GetCurrentUser('_id') userId: string,
   ) {
     return this.service.ticketList(dto, userId);
+  }
+
+  @Get(':id')
+  @UseInterceptors(new ResponseInterceptor('ticket'))
+  async detailTicket(@Param('id') id: string) {
+    return this.service.detailTicket(id);
   }
 }

@@ -114,6 +114,19 @@ export class TicketsService {
     };
   }
 
+  async detailTicket(id: string) {
+    const ticket = await this.ticketModel
+      .findOne({
+        _id: new mongoose.Types.ObjectId(id),
+      })
+      .populate([
+        { path: 'event', populate: { path: 'schedules' } },
+        { path: 'owner' },
+        { path: 'scannedBy' },
+      ]);
+    return transformer(TicketVms, circularToJSON(ticket));
+  }
+
   async generateQr(dto: CreateTicketQrDto, userId: string) {
     const { ticket, walletAddress } = dto;
     const ticketData = await this.ticketModel.findOne({
