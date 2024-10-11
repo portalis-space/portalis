@@ -297,7 +297,7 @@ export class TicketsService {
         contractAddress,
         token,
       );
-      if (!nft || nft.owner != walletAddress) {
+      if (!nft || nft.owner.toLowerCase() != walletAddress.toLowerCase()) {
         response.message = 'Invalid Nft';
         return response;
       }
