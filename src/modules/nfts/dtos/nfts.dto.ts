@@ -35,7 +35,7 @@ export class NftOwnedByWalletAddressDto extends OmitType(BaseListRequest, [
   })
   @IsOptional()
   @Transform(({ value }) =>
-    value.map(data => {
+    value?.map(data => {
       return data.toLowerCase();
     }),
   )
