@@ -1,8 +1,9 @@
+import { BaseViewmodel } from '@utils/base-class/base.viewmodel';
 import { Expose, Type } from 'class-transformer';
 import { EventsVms } from 'modules/events/vms/events.vms';
 import { UserVms } from 'modules/users/vms/users.vms';
 
-export class TicketVms {
+export class TicketVms extends BaseViewmodel {
   @Expose()
   chain: string;
   @Expose()
