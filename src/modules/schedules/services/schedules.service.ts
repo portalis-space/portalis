@@ -174,20 +174,25 @@ export class SchedulesService {
       Number(schedule.startAt) - Number(now),
       Number(schedule.endAt) - Number(now),
     ];
-    this.logger.debug(
-      schedule.endAt,
-      now,
-      Number(schedule.endAt) - Number(now),
-    );
+    // this.logger.debug(
+    //   schedule.endAt,
+    //   now,
+    //   Number(schedule.endAt) - Number(now),
+    // );
     this.scheduleQue.add(
       'start',
       { id: schedule.id },
-      { ...(startDelay > 0 && { delay: startDelay }), jobId: schedule.id },
+      {
+        ...(startDelay > 0 && {
+          delay: startDelay,
+          jobId: `${schedule.id}_start`,
+        }),
+      },
     );
     this.scheduleQue.add(
       'end',
       { id: schedule.id },
-      { ...(endDelay > 0 && { delay: endDelay }), jobId: schedule.id },
+      { ...(endDelay > 0 && { delay: endDelay, jobId: `${schedule.id}_end` }) },
     );
   }
 }

@@ -306,14 +306,21 @@ export class EventsService {
       'activate',
       { id: event._id.toString() },
       {
-        ...(startDelay > 0 && { delay: startDelay }),
-        jobId: event._id.toString(),
+        ...(startDelay > 0 && {
+          delay: startDelay,
+          jobId: `${event._id.toString()}_activate`,
+        }),
       },
     );
     this.eventQue.add(
       'deactivate',
       { id: event._id.toString() },
-      { ...(endDelay > 0 && { delay: endDelay }), jobId: event._id.toString() },
+      {
+        ...(endDelay > 0 && {
+          delay: endDelay,
+          jobId: `${event._id.toString()}_deactivate`,
+        }),
+      },
     );
   }
 }
