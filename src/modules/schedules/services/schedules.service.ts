@@ -140,7 +140,7 @@ export class SchedulesService {
             readySched.push(scheduleDto);
             return;
           }
-          this.logger.debug({ scheduleDto });
+          // this.logger.debug({ scheduleDto });
           const savedSched = await this.createSchedule(scheduleDto);
           return readySched.push(savedSched.id);
         }

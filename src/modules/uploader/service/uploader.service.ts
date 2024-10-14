@@ -9,9 +9,13 @@ export class UploaderService {
   private readonly logger = new Logger(UploaderService.name);
   constructor(private readonly ipfs: IpfsService) {}
 
-  async uploadFile({ originalname, buffer, mimetype }: Express.Multer.File) {
+  async uploadFile(file: Express.Multer.File) {
+    const { buffer, ...trimedDto } = file;
     const stream = Readable.from(buffer);
-    const ipfsFile = await this.ipfs.ipfsFileUpload(stream, originalname);
+    const ipfsFile = await this.ipfs.ipfsFileUpload(
+      stream,
+      trimedDto.originalname,
+    );
     return transformer(UploaderVms, circularToJSON(ipfsFile));
   }
 }

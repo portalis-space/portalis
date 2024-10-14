@@ -18,12 +18,6 @@ export class AdmGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride('isPublic', [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (isPublic) return true;
-
     const request = context.switchToHttp().getRequest();
 
     const token = this.extractTokenFromHeader(request);

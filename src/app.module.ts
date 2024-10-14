@@ -5,7 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 // import { AuthModule } from './auth/auth.module';
 // import { PrismaModule } from '@config/database/prisma.module';
 // import { BcChainModule } from '../modules_old/bc-chain/bc-chain.module';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { EventsModule } from 'modules/events/events.module';
 import { AuthModule } from 'modules/auth/auth.module';
 import { AtGuard } from 'modules/common/guards';
@@ -20,6 +20,9 @@ import { TicketsModule } from 'modules/tickets/tickets.module';
 import { ParticipantsModule } from 'modules/participants/participants.module';
 import { QuestsModule } from 'modules/quests/quests.module';
 import { ProgressQuestsModule } from 'modules/progress-quests/progress-quests.module';
+import { AllExceptionsFilter } from '@utils/exception-fileter';
+import { LoggersModule } from 'modules/loggers/loggers.module';
+import { UserLogInterceptor } from '@utils/interceptors/user-log.interceptor';
 // import { AtGuard, RolesGuard } from '../modules_old/common/guards';
 // import { NftContractModule } from '../modules_old/nft-contract/nft-contract.module';
 // import { TicketModule } from '../modules_old/ticket/ticket.module';
@@ -54,6 +57,7 @@ import { ProgressQuestsModule } from 'modules/progress-quests/progress-quests.mo
     // PoaModule,
     ProcessorsModule,
     AuthModule,
+    LoggersModule,
     ...CONFIG_MODULES,
     // EventModule,
     // TicketModule,
@@ -66,6 +70,14 @@ import { ProgressQuestsModule } from 'modules/progress-quests/progress-quests.mo
     {
       provide: APP_GUARD,
       useClass: AtGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: UserLogInterceptor,
     },
     // {
     //   provide: APP_GUARD,

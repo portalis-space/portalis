@@ -21,8 +21,8 @@ import { BullModule } from '@nestjs/bull';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Event.name, schema: EventSchema }]),
     MongooseModule.forFeature([
+      { name: Event.name, schema: EventSchema },
       { name: Collection.name, schema: CollectionSchema },
     ]),
     MongooseModule.forFeature([
@@ -43,5 +43,6 @@ import { BullModule } from '@nestjs/bull';
   ],
   controllers: [EventsController],
   providers: [EventsService],
+  exports: [EventsService],
 })
 export class EventsModule {}

@@ -284,7 +284,10 @@ export class TicketsService {
     }
     response.event = populatedEvent;
     // this.logger.debug({ populatedEvent });
-    if (populatedEvent.schedules.length < 1) {
+    if (
+      validityCheckType != ValidityCheckTypeEnum.GENERATE_TICKET &&
+      populatedEvent.schedules.length < 1
+    ) {
       response.message = 'Invalid Event Schedule';
       return response;
     }

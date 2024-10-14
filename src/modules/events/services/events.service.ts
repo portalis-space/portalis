@@ -16,7 +16,7 @@ import { MetaEncryptorService } from '@utils/helpers/meta-encryptor/meta-encrypt
 import { SchedulesService } from 'modules/schedules/services/schedules.service';
 import { CollectionsService } from 'modules/collections/services/collections.service';
 import { Collection } from '@config/dbs/collection.model';
-import { ChainsTypeEnum } from '@utils/enums';
+import { ChainsTypeEnum, ScheduleEnum } from '@utils/enums';
 import { NftScanEvmService } from 'modules/nft-scans/services/nft-scan-evm.service';
 import { NftScanTonService } from 'modules/nft-scans/services/nft-scan-ton.service';
 import { EvmChain } from 'nftscan-api';
@@ -124,7 +124,7 @@ export class EventsService {
       }),
       ...(contractAddress.length > 0 && { contractAddresses: contractAddress }),
       ...(status && { status }),
-      ...(scannerEvent && { scanners: [username] }),
+      ...(scannerEvent && { scanners: username }),
     };
 
     // this.logger.debug(whereQ);
@@ -225,6 +225,14 @@ export class EventsService {
     return transformer(BaseViewmodel, circularToJSON(event));
   }
 
+  async changeEventState(id: string, status: ScheduleEnum) {
+    const event = await this.event.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(id) },
+      { status: status },
+    );
+    return transformer(BaseViewmodel, circularToJSON(event));
+  }
+
   private async transactionBuilder(
     dto: UpdateEventDto,
     username?: string,
@@ -296,7 +304,7 @@ export class EventsService {
 
     this.eventQue.add(
       'activate',
-      { id: event._id },
+      { id: event._id.toString() },
       {
         ...(startDelay > 0 && { delay: startDelay }),
         jobId: event._id.toString(),
@@ -304,7 +312,7 @@ export class EventsService {
     );
     this.eventQue.add(
       'deactivate',
-      { id: event._id },
+      { id: event._id.toString() },
       { ...(endDelay > 0 && { delay: endDelay }), jobId: event._id.toString() },
     );
   }
