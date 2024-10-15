@@ -72,9 +72,9 @@ export class AuthService {
 
   async validateTelegramToken(token: string) {
     const parsedToken = parse(token);
-    // if (!isValid(token, this.TELE_BOT)) {
-    //   throw new UnauthorizedException();
-    // }
+    if (!isValid(token, this.TELE_BOT)) {
+      throw new UnauthorizedException();
+    }
     const userPhoto = await this.telebot.getUserPhoto(
       parsedToken.user.id.toString(),
     );
