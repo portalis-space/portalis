@@ -23,6 +23,7 @@ import { ProgressQuestsModule } from 'modules/progress-quests/progress-quests.mo
 import { AllExceptionsFilter } from '@utils/exception-fileter';
 import { LoggersModule } from 'modules/loggers/loggers.module';
 import { UserLogInterceptor } from '@utils/interceptors/user-log.interceptor';
+import { SocketIoModule } from 'modules/socketio/socketio.module';
 // import { AtGuard, RolesGuard } from '../modules_old/common/guards';
 // import { NftContractModule } from '../modules_old/nft-contract/nft-contract.module';
 // import { TicketModule } from '../modules_old/ticket/ticket.module';
@@ -58,6 +59,7 @@ import { UserLogInterceptor } from '@utils/interceptors/user-log.interceptor';
     ProcessorsModule,
     AuthModule,
     LoggersModule,
+    SocketIoModule,
     ...CONFIG_MODULES,
     // EventModule,
     // TicketModule,
