@@ -11,8 +11,8 @@ export class UsersService {
   constructor(@InjectModel(User.name) private readonly user: Model<User>) {}
 
   async createUser(dto: CreateUserDto) {
-    const { userId, username } = dto;
-    const user = await this.user.findOneAndUpdate({ userId, username }, dto, {
+    const { userId } = dto;
+    const user = await this.user.findOneAndUpdate({ userId }, dto, {
       upsert: true,
       returnDocument: 'after',
     });
