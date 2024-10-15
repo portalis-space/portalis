@@ -29,6 +29,8 @@ import { User } from '@config/dbs/user.model';
 import { Participant } from '@config/dbs/participant.model';
 import { ValidityCheckTypeEnum } from '@utils/enums/validity.enum';
 import { INftOwnerAmount } from 'modules/nft-scans/interfaces/nft-scans.interface';
+import { WebSocketServer } from '@nestjs/websockets';
+import { Server } from 'socket.io';
 
 @Injectable()
 export class TicketsService {
@@ -47,6 +49,8 @@ export class TicketsService {
     private readonly config: ConfigService,
     private readonly enc: MetaEncryptorService,
   ) {}
+
+  @WebSocketServer() io: Server;
 
   async createTicket(dto: CreateTicketDto, userId: string) {
     const { contractAddress, event, token, walletAddress, chain, type } = dto;
@@ -219,13 +223,21 @@ export class TicketsService {
       ticket: ticketData._id,
       user: ticketData.owner,
     });
-    await Promise.all([
+    const [_ticket, savedParticipant] = await Promise.all([
       this.ticketModel.findOneAndUpdate(
         { _id: ticketData._id },
         { status: TicketStatusEnum.USED, scannedBy: scanner._id },
       ),
-      participant.save({ validateBeforeSave: true }),
+      (await participant.save({ validateBeforeSave: true })).populate([
+        { path: 'user' },
+        { path: 'event' },
+        { path: 'schedule' },
+        { path: 'ticket' },
+      ]),
     ]);
+    this.io.emit(ticketData.owner.toString(), {
+      participant: savedParticipant,
+    });
   }
 
   private async validiyCheck(
