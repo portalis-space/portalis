@@ -108,7 +108,7 @@ export class EventsService {
             const collection = await this.collection.findOne({
               contract_address: row.contract_address,
             });
-            contractAddress.push(collection._id);
+            if (collection) contractAddress.push(collection._id);
           }),
         );
       }
