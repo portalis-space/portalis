@@ -127,7 +127,7 @@ export class EventsService {
       ...(scannerEvent && { scanners: username }),
     };
 
-    // this.logger.debug(whereQ);
+    this.logger.debug(whereQ);
     // if (eligibleEvent) {
     //   const eligibleCollection;
     //   const collections = await this.collection.find({ contract_address: [] });
