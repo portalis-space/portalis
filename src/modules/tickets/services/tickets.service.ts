@@ -284,6 +284,9 @@ export class TicketsService {
         path: 'owner',
         // match: { contract_address: contractAddress },
       },
+      {
+        path: 'tickets',
+      },
     ]);
     // this.logger.debug(eventData.owner);
     if (
@@ -319,7 +322,13 @@ export class TicketsService {
       return response;
     }
     // validate event capacity
-    // if(){}
+    if (
+      validityCheckType == ValidityCheckTypeEnum.GENERATE_TICKET &&
+      +eventData.tickets.length >= +eventData.capacity
+    ) {
+      response.message = 'Allready full booked';
+      return response;
+    }
     if (type == ChainsTypeEnum.EVM) {
       const nftOwner = await this.nftOwnerCheck(
         chain as unknown as EvmChain,
