@@ -122,7 +122,7 @@ export class EventsService {
       ...(owner && {
         owner: new mongoose.Types.ObjectId(this.encriptor.decrypt(owner)),
       }),
-      ...(eligibleEvent && { contractAddresses: contractAddress }),
+      ...(eligibleEvent && { contractAddresses: { $in: contractAddress } }),
       ...(status && { status }),
       ...(scannerEvent && { scanners: username }),
     };
