@@ -123,11 +123,11 @@ export class EventsService {
         owner: new mongoose.Types.ObjectId(this.encriptor.decrypt(owner)),
       }),
       ...(eligibleEvent && { contractAddresses: { $in: contractAddress } }),
-      ...(status && { status }),
+      ...(status && status.length > 0 && { status: { $in: status } }),
       ...(scannerEvent && { scanners: username }),
     };
 
-    this.logger.debug(whereQ);
+    // this.logger.debug(whereQ);
     // if (eligibleEvent) {
     //   const eligibleCollection;
     //   const collections = await this.collection.find({ contract_address: [] });
@@ -145,8 +145,8 @@ export class EventsService {
       };
     const aggregateQ: PipelineStage[] = [];
     const paginationQ: PipelineStage[] = [
-      { $limit: +pagination.getSize() },
       { $skip: +pagination.getPage() },
+      { $limit: +pagination.getSize() },
     ];
     if (geoQ) aggregateQ.push(geoQ);
     if (search)
@@ -174,6 +174,7 @@ export class EventsService {
       this.event.aggregate(aggregateQ.concat(paginationQ)),
       this.event.aggregate(aggregateQ),
     ]);
+    // this.logger.debug(events);
     const populatedEvents = await this.event.populate(events, [
       {
         path: 'owner',

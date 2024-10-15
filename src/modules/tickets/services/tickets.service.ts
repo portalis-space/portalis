@@ -84,8 +84,8 @@ export class TicketsService {
       ...(event && { event: new mongoose.Types.ObjectId(event) }),
     };
     const paginationQ: PipelineStage[] = [
-      { $limit: +pagination.getSize() },
       { $skip: +pagination.getPage() },
+      { $limit: +pagination.getSize() },
     ];
     if (search)
       aggregateQ.push({
@@ -317,7 +317,7 @@ export class TicketsService {
         100,
       );
       // testing log
-      this.logger.debug({ nftOwner });
+      // this.logger.debug({ nftOwner });
       if (!nftOwner) {
         response.message = 'Invalid Nft';
         return response;

@@ -177,10 +177,17 @@ export class EventListDto extends BaseListRequest {
   @Transform(({ value }) => value == 'true')
   isHighlighted?: boolean;
 
-  @ApiPropertyOptional({ enum: ScheduleEnum, default: ScheduleEnum.UPCOMING })
+  @ApiPropertyOptional({
+    name: 'status[]',
+    isArray: true,
+    type: ScheduleEnum,
+    // enum: ScheduleEnum,
+    example: Object.keys(ScheduleEnum),
+    // default: ScheduleEnum.UPCOMING,
+  })
   @IsOptional()
-  @IsEnum(ScheduleEnum)
-  status?: ScheduleEnum;
+  // @IsEnum(ScheduleEnum)
+  status?: ScheduleEnum[];
 
   @ValidateIf(obj => obj.scannerEvent)
   @Equals(undefined, {
