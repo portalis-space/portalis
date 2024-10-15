@@ -28,6 +28,7 @@ import { MetaEncryptorService } from '@utils/helpers/meta-encryptor/meta-encrypt
 import { User } from '@config/dbs/user.model';
 import { Participant } from '@config/dbs/participant.model';
 import { ValidityCheckTypeEnum } from '@utils/enums/validity.enum';
+import { INftOwnerAmount } from 'modules/nft-scans/interfaces/nft-scans.interface';
 
 @Injectable()
 export class TicketsService {
@@ -308,19 +309,22 @@ export class TicketsService {
     // validate event capacity
     // if(){}
     if (type == ChainsTypeEnum.EVM) {
-      const nft = await this.nftScanEvmService.getNft(
+      const nftOwner = await this.nftOwnerCheck(
         chain as unknown as EvmChain,
         contractAddress,
-        token,
+        token.toString(),
+        walletAddress,
+        100,
       );
-      this.logger.debug({ nft, walletAddress });
-      if (!nft || nft.owner?.toLowerCase() != walletAddress?.toLowerCase()) {
+      // testing log
+      this.logger.debug({ nftOwner });
+      if (!nftOwner) {
         response.message = 'Invalid Nft';
         return response;
       }
       if (
         validityCheckType == ValidityCheckTypeEnum.GENERATE_TICKET &&
-        tickets >= +nft.amount
+        tickets >= +nftOwner.amount
       ) {
         response.message = 'Nft Already Used';
         return response;
@@ -341,5 +345,38 @@ export class TicketsService {
     response.valid = true;
     response.message = 'Valid Request';
     return response;
+  }
+
+  private async nftOwnerCheck(
+    chain: EvmChain,
+    contract: string,
+    tokenId: string,
+    walletAddress: string,
+    limit?: number,
+    cursor?: string,
+  ) {
+    let owner;
+    const nftOwnersResponse = await this.nftScanEvmService.getNftOwner(
+      chain,
+      contract,
+      tokenId,
+      limit,
+      cursor,
+    );
+    owner = nftOwnersResponse.content.find(
+      data => data.account_address.toLowerCase() == walletAddress.toLowerCase(),
+    );
+
+    if (!owner) {
+      owner = await this.nftOwnerCheck(
+        chain,
+        contract,
+        tokenId,
+        walletAddress,
+        limit,
+        nftOwnersResponse.next,
+      );
+    }
+    return owner as INftOwnerAmount;
   }
 }

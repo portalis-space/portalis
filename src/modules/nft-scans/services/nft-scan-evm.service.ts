@@ -2,7 +2,10 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { circularToJSON } from '@utils/helpers';
 import { ErcType, EvmChain, NftscanEvm } from 'nftscan-api';
-import { CollectionAssets } from 'nftscan-api/dist/src/types/evm';
+import {
+  CollectionAssets,
+  QueryAssetOwnerByContractAndTokenIdResponse,
+} from 'nftscan-api/dist/src/types/evm';
 
 @Injectable()
 export class NftScanEvmService {
@@ -83,8 +86,8 @@ export class NftScanEvmService {
     chain: EvmChain,
     contractAddress: string,
     tokenId: string,
-    cursor?: string,
     limit?: number,
+    cursor?: string,
   ) {
     const nftScan = new NftscanEvm({
       apiKey: this.NFTSCAN_KEY,
