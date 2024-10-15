@@ -38,3 +38,8 @@ export interface INftScanTonCollectionNft {
   description: string;
   assets: INftScanTonNft[];
 }
+
+export interface INftOwnerAmount {
+  account_address: string;
+  amount: string;
+}
