@@ -13,7 +13,7 @@ export class NftScanEvmService {
   async getCollection(chain: EvmChain, contractAddress: string) {
     const nftScan = new NftscanEvm({
       apiKey: this.NFTSCAN_KEY,
-      chain: chain,
+      chain,
     });
     const collection =
       await nftScan.collection.getCollectionsByContract(contractAddress);
@@ -23,7 +23,7 @@ export class NftScanEvmService {
   async getAllNftByWallet(chain: EvmChain, walletAddress: string) {
     const nftScan = new NftscanEvm({
       apiKey: this.NFTSCAN_KEY,
-      chain: chain,
+      chain,
     });
     const nfts = await nftScan.asset.getAllAssets(walletAddress);
     return circularToJSON(nfts);
@@ -38,7 +38,7 @@ export class NftScanEvmService {
   ) {
     const nftScan = new NftscanEvm({
       apiKey: this.NFTSCAN_KEY,
-      chain: chain,
+      chain,
     });
     let nfts = await nftScan.asset.getAllAssets(walletAddress);
     if (contractAddress && contractAddress.length > 0) {
@@ -70,12 +70,32 @@ export class NftScanEvmService {
   async getNft(chain: EvmChain, contractAddress: string, tokenId: string) {
     const nftScan = new NftscanEvm({
       apiKey: this.NFTSCAN_KEY,
-      chain: chain,
+      chain,
     });
     const nft = await nftScan.asset.getAssetsByContractAndTokenId(
       contractAddress,
       tokenId,
     );
     return nft;
+  }
+
+  async getNftOwner(
+    chain: EvmChain,
+    contractAddress: string,
+    tokenId: string,
+    cursor?: string,
+    limit?: number,
+  ) {
+    const nftScan = new NftscanEvm({
+      apiKey: this.NFTSCAN_KEY,
+      chain,
+    });
+    const nftOwner = await nftScan.other.getAssetOwnerByContractAndTokenId({
+      contract_address: contractAddress,
+      token_id: tokenId,
+      cursor,
+      limit,
+    });
+    return nftOwner;
   }
 }
