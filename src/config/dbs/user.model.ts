@@ -13,12 +13,12 @@ export class User {
   @Prop({ type: String })
   chatId?: string;
 
-  @Prop({ type: String, unique: true, required: true })
-  username: string;
-  @Prop({ type: String, required: true })
-  firstName: string;
-  @Prop({ type: String, required: true })
-  lastName: string;
+  @Prop({ type: String })
+  username?: string;
+  @Prop({ type: String })
+  firstName?: string;
+  @Prop({ type: String })
+  lastName?: string;
 
   @Prop({ unique: true, type: String, required: true })
   userId: string;

@@ -40,15 +40,15 @@ export class CreateUserDto {
 
   @ApiProperty({ default: 'bedulkoflok' })
   @IsNotEmpty()
-  username: string;
+  username?: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  firstName: string;
+  firstName?: string;
 
   @ApiProperty()
   @IsNotEmpty()
-  lastName: string;
+  lastName?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
