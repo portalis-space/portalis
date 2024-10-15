@@ -313,6 +313,7 @@ export class TicketsService {
         contractAddress,
         token,
       );
+      this.logger.debug({ nft, walletAddress });
       if (!nft || nft.owner?.toLowerCase() != walletAddress?.toLowerCase()) {
         response.message = 'Invalid Nft';
         return response;
