@@ -17,7 +17,7 @@ export class NftOwnedByWalletAddressDto extends OmitType(BaseListRequest, [
 ] as const) {
   @ApiProperty({ default: '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d' })
   @IsNotEmpty()
-  @Transform(({ value }) => value.toLowerCase())
+  @Transform(({ value }) => value?.toLowerCase())
   walletAddress: string;
 
   @ApiProperty({ enum: chains, default: chains.ETH })
@@ -36,7 +36,7 @@ export class NftOwnedByWalletAddressDto extends OmitType(BaseListRequest, [
   @IsOptional()
   @Transform(({ value }) =>
     value?.map(data => {
-      return data.toLowerCase();
+      return data?.toLowerCase();
     }),
   )
   contractAddress?: string[];
@@ -52,6 +52,6 @@ export class NftByContractAddressDto extends OmitType(
 
   @ApiProperty({ default: '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d' })
   @IsNotEmpty()
-  @Transform(({ value }) => value.toLowerCase())
+  @Transform(({ value }) => value?.toLowerCase())
   contractAddress: string;
 }

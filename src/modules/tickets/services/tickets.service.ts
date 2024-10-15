@@ -313,7 +313,7 @@ export class TicketsService {
         contractAddress,
         token,
       );
-      if (!nft || nft.owner.toLowerCase() != walletAddress.toLowerCase()) {
+      if (!nft || nft.owner?.toLowerCase() != walletAddress?.toLowerCase()) {
         response.message = 'Invalid Nft';
         return response;
       }
@@ -329,7 +329,7 @@ export class TicketsService {
       const nft = await this.nftScanTonService.getSingleNft(token);
       if (
         !nft ||
-        nft.owner != walletAddress ||
+        nft.owner?.toLowerCase() != walletAddress?.toLowerCase() ||
         (validityCheckType == ValidityCheckTypeEnum.GENERATE_TICKET &&
           tickets) > 0
       ) {

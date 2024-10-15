@@ -15,13 +15,13 @@ export class CreateTicketDto {
     default: '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d',
   })
   @IsNotEmpty()
-  @Transform(({ value }) => value.toLowerCase())
+  @Transform(({ value }) => value?.toLowerCase())
   contractAddress: string;
   @ApiProperty({
     type: String,
     default: '0xca1257ade6f4fa6c6834fdc42e030be6c0f5a813',
   })
-  @Transform(({ value }) => value.toLowerCase())
+  @Transform(({ value }) => value?.toLowerCase())
   @IsNotEmpty()
   walletAddress: string;
   @ApiProperty()
@@ -43,7 +43,7 @@ export class ListTicketDto extends BaseListRequest {
 
   @ApiProperty({ default: '0xca1257ade6f4fa6c6834fdc42e030be6c0f5a813' })
   @IsNotEmpty()
-  @Transform(({ value }) => value.toLowerCase())
+  @Transform(({ value }) => value?.toLowerCase())
   walletAddress: string;
 }
 export class CreateTicketQrDto {
@@ -53,7 +53,7 @@ export class CreateTicketQrDto {
 
   @ApiProperty({ default: '0xca1257ade6f4fa6c6834fdc42e030be6c0f5a813' })
   @IsNotEmpty()
-  @Transform(({ value }) => value.toLowerCase())
+  @Transform(({ value }) => value?.toLowerCase())
   walletAddress: string;
 }
 export class ScanTicketQrDto {
