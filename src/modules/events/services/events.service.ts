@@ -124,7 +124,7 @@ export class EventsService {
       }),
       ...(eligibleEvent && { contractAddresses: { $in: contractAddress } }),
       ...(status && status.length > 0 && { status: { $in: status } }),
-      ...(scannerEvent && { scanners: username }),
+      ...(scannerEvent && { scanners: { $in: [username] } }),
     };
 
     // this.logger.debug(whereQ);
