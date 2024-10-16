@@ -36,7 +36,7 @@ export class SocketIoGateway
   async handleConnection(client: Socket, ...args: any[]) {
     // this.logger.debug(`client ${client.id} connected`);
     // console.dir(client, { depth: null });
-    // this.logger.debug(client.handshake.headers['authorization']);
+    this.logger.debug(client.handshake.headers['authorization']);
     try {
       const clietId = client.handshake.headers['authorization'];
       const decClienId = this.enc.decrypt(clietId);
