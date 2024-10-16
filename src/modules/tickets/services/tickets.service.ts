@@ -31,6 +31,7 @@ import { ValidityCheckTypeEnum } from '@utils/enums/validity.enum';
 import { INftOwnerAmount } from 'modules/nft-scans/interfaces/nft-scans.interface';
 import { WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
+import { SocketIoGateway } from 'modules/socketio/socketio.gateway';
 
 @Injectable()
 export class TicketsService {
@@ -48,9 +49,10 @@ export class TicketsService {
     private readonly nftScanTonService: NftScanTonService,
     private readonly config: ConfigService,
     private readonly enc: MetaEncryptorService,
+    private readonly ioGateway: SocketIoGateway,
   ) {}
 
-  @WebSocketServer() io: Server;
+  // @WebSocketServer() io: Server;
 
   async createTicket(dto: CreateTicketDto, userId: string) {
     const { contractAddress, event, token, walletAddress, chain, type } = dto;
@@ -235,7 +237,7 @@ export class TicketsService {
         { path: 'ticket' },
       ]),
     ]);
-    this.io.emit(ticketData.owner.toString(), {
+    this.ioGateway.io.emit(ticketData.owner.toString(), {
       participant: savedParticipant,
     });
   }

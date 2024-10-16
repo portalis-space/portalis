@@ -10,5 +10,6 @@ import { MetaEncryptorModule } from '@utils/helpers/meta-encryptor';
     MetaEncryptorModule,
   ],
   providers: [SocketIoGateway],
+  exports: [SocketIoGateway],
 })
 export class SocketIoModule {}

@@ -27,7 +27,7 @@ export class SocketIoGateway
     private readonly enc: MetaEncryptorService,
     @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}
-  // @WebSocketServer() io: Server;
+  @WebSocketServer() io: Server;
 
   afterInit() {
     this.logger.log('Initialized');
