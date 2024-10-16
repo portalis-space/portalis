@@ -48,7 +48,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         : HttpStatus.INTERNAL_SERVER_ERROR;
     const stack = !exception.stack ? null : exception.stack;
     const errorResponse = exception?.response;
-    // console.log('\x1b[36m', stack, '\x1b[0m');
+    console.log('\x1b[36m', stack, '\x1b[0m');
     const errorCode = errorResponse?.error || errorResponse?.code || undefined;
     const errorMessage =
       errorResponse?.message || exception?.message || exception;

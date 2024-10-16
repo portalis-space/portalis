@@ -16,6 +16,7 @@ export const resourceNames = [
   'participant',
   'quest',
   'progress',
+  'banner',
 ] as const;
 
 export type Resource = (typeof resourceNames)[number];
