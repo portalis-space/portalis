@@ -34,22 +34,22 @@ export class SocketIoGateway
   }
 
   async handleConnection(client: Socket, ...args: any[]) {
-    this.logger.debug(`client ${client.id} connected`);
+    // this.logger.debug(`client ${client.id} connected`);
     // console.dir(client, { depth: null });
     // this.logger.debug(client.handshake.headers['authorization']);
-    // try {
-    // const clietId = client.handshake.headers['authorization'];
-    // const decClienId = this.enc.decrypt(clietId);
-    // const user = await this.userModel.findOne({
-    //   _id: new mongoose.Types.ObjectId(decClienId),
-    // });
-    // if (!user) {
-    //   // client.emit('Invalid Credential');
-    //   client.disconnect();
-    // }
-    // } catch (error) {
-    //   client.disconnect();
-    // }
+    try {
+      const clietId = client.handshake.headers['authorization'];
+      const decClienId = this.enc.decrypt(clietId);
+      const user = await this.userModel.findOne({
+        _id: new mongoose.Types.ObjectId(decClienId),
+      });
+      if (!user) {
+        // client.emit('Invalid Credential');
+        client.disconnect();
+      }
+    } catch (error) {
+      client.disconnect();
+    }
   }
 
   handleDisconnect(client: any) {
