@@ -4,8 +4,10 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { EventsService } from '../services/events.service';
@@ -14,8 +16,13 @@ import {
   ResponsePaginationInterceptor,
 } from '@utils/interceptors';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CreateEventDto, EventListDto } from '../dtos/events.dto';
-import { GetCurrentUser } from 'modules/common/decorators';
+import {
+  CreateEventDto,
+  EventListDto,
+  HighlightManagerDto,
+} from '../dtos/events.dto';
+import { GetCurrentUser, Public } from 'modules/common/decorators';
+import { AdmGuard } from 'modules/common/guards/adm.guard';
 
 @ApiTags('Event')
 @ApiBearerAuth()

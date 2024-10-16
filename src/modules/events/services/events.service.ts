@@ -5,6 +5,7 @@ import mongoose, { Model, PipelineStage, RootFilterQuery } from 'mongoose';
 import {
   CreateEventDto,
   EventListDto,
+  HighlightManagerDto,
   UpdateEventDto,
 } from '../dtos/events.dto';
 import { circularToJSON, transformer } from '@utils/helpers';
@@ -223,6 +224,15 @@ export class EventsService {
       },
       { deletedAt: new Date() },
     );
+    return transformer(BaseViewmodel, circularToJSON(event));
+  }
+
+  async makeHighligthed(dto: HighlightManagerDto, id: string) {
+    const event = await this.event.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(id) },
+      { isHighlighted: dto.isHighlighted },
+    );
+
     return transformer(BaseViewmodel, circularToJSON(event));
   }
 

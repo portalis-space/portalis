@@ -28,6 +28,7 @@ import {
   IsDateString,
   IsDecimal,
   IsEnum,
+  isNotEmpty,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -202,4 +203,10 @@ export class EventListDto extends BaseListRequest {
   @IsOptional()
   @Transform(({ value }) => value == 'true')
   scannerEvent: boolean;
+}
+
+export class HighlightManagerDto {
+  @ApiProperty({ type: Boolean })
+  @IsNotEmpty()
+  isHighlighted: boolean;
 }
