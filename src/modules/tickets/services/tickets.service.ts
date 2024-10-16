@@ -237,7 +237,7 @@ export class TicketsService {
         { path: 'ticket' },
       ]),
     ]);
-    this.ioGateway.io.emit(ticketData.owner.toString(), {
+    this.ioGateway.io.emit(this.enc.encrypt(ticketData.owner.toString()), {
       participant: savedParticipant,
     });
   }
