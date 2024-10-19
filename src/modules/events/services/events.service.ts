@@ -262,10 +262,9 @@ export class EventsService {
       ...trimedDto
     } = dto;
 
-    let eventScanners = [username];
-    if (scanners && !scanners.includes(username)) {
-      eventScanners = eventScanners.concat(scanners);
-    }
+    let eventScanners: string[] = [];
+    if (scanners && scanners.length > 0) eventScanners.concat(scanners);
+    if (!eventScanners.includes(username)) eventScanners.push(username);
     const { utcEndAt, utcStartAt } = this.scheduleService.utcGenerator(
       startDate,
       startTime,
