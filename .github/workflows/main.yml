@@ -27,24 +27,24 @@ jobs:
       # Step 3: Build the Docker image
       - name: Build Docker image
         run: |
-          docker build -q -t ${{ env.IMAGE_PROD_TAG }} .
+          docker build -q -t ${{ env.IMAGE_TAG }} .
 
       - name: Login Registry
         run: |
-          docker login -u ${{ env.DOCKER_PROD_USER }} -p '${{ env.DOCKER_PROD_PASSWORD }}'
+          docker login -u ${{ env.DOCKER_USER }} -p '${{ env.DOCKER_PASSWORD }}'
 
       - name: Publish Image
         run: |
-          docker push ${{ env.IMAGE_PROD_TAG }}
+          docker push ${{ env.IMAGE_TAG }}
 
       # Step 4: Copy Docker image to EC2 instance
       - name: Setup Env
         run: |
-          echo "${{ env.EC2_PROD_KEY }}" > ec2_key.pem
+          echo "${{ env.EC2_KEY }}" > ec2_key.pem
           chmod 600 ec2_key.pem
 
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ env.EC2_PROD_USERNAME }}@${{ env.EC2_PROD_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ env.EC2_USERNAME }}@${{ env.EC2_HOST }} << 'EOF'
             ./deploy.sh
           EOF
