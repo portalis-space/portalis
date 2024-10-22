@@ -1,15 +1,15 @@
-name: PORTALIS CI/CD
+name: PORTALIS PRODUCTION CI/CD
 on:
   push:
     branches:
-      - development
+      - main
 env:
-  EC2_HOST: ${{ secrets.EC2_HOST }}
-  EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-  EC2_KEY: ${{ secrets.EC2_KEY }}
-  IMAGE_TAG: ${{ secrets.IMAGE_TAG }}
-  DOCKER_USER: ${{ secrets.DOCKER_USER }}
-  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  EC2_HOST: ${{ secrets.EC2_PROD_HOST }}
+  EC2_USERNAME: ${{ secrets.EC2_PROD_USERNAME }}
+  EC2_KEY: ${{ secrets.EC2_PROD_KEY }}
+  IMAGE_TAG: ${{ secrets.IMAGE_PROD_TAG }}
+  DOCKER_USER: ${{ secrets.DOCKER_PROD_USER }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PROD_PASSWORD }}
 
 jobs:
   build:
@@ -27,20 +27,24 @@ jobs:
       # Step 3: Build the Docker image
       - name: Build Docker image
         run: |
-          docker build -t {{ env.IMAGE_TAG }} .
-          
-      - name: Login TKE Registry
-        run: |
-          docker login -u ${{ enc.DOCKER_USER }} -p '${{ env.DOCKER_PASSWORD }}'
-      
-      - name: Publish
-        run: |
-          docker push {{ env.IMAGE_TAG }}
+          docker build -q -t ${{ env.IMAGE_PROD_TAG }} .
 
-      - name: 🎉 Deploy to Remote Server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ env.EC2_HOST }}
-          username: ${{ env.USERNAME }}
-          key: ${{ env.EC2_KEY }}
-          script: deploy.sh
+      - name: Login Registry
+        run: |
+          docker login -u ${{ env.DOCKER_PROD_USER }} -p '${{ env.DOCKER_PROD_PASSWORD }}'
+
+      - name: Publish Image
+        run: |
+          docker push ${{ env.IMAGE_PROD_TAG }}
+
+      # Step 4: Copy Docker image to EC2 instance
+      - name: Setup Env
+        run: |
+          echo "${{ env.EC2_PROD_KEY }}" > ec2_key.pem
+          chmod 600 ec2_key.pem
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ env.EC2_PROD_USERNAME }}@${{ env.EC2_PROD_HOST }} << 'EOF'
+            ./deploy.sh
+          EOF

@@ -21,12 +21,14 @@ import { MetaEncryptorService } from '@utils/helpers/meta-encryptor/meta-encrypt
 import { Transform, Type } from 'class-transformer';
 import {
   ArrayMinSize,
+  Equals,
   IsArray,
   IsBoolean,
   IsBooleanString,
   IsDateString,
   IsDecimal,
   IsEnum,
+  isNotEmpty,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -176,11 +178,23 @@ export class EventListDto extends BaseListRequest {
   @Transform(({ value }) => value == 'true')
   isHighlighted?: boolean;
 
-  @ApiPropertyOptional({ enum: ScheduleEnum, default: ScheduleEnum.UPCOMING })
+  @ApiPropertyOptional({
+    name: 'status[]',
+    isArray: true,
+    type: ScheduleEnum,
+    // enum: ScheduleEnum,
+    example: Object.keys(ScheduleEnum),
+    // default: ScheduleEnum.UPCOMING,
+  })
   @IsOptional()
-  @IsEnum(ScheduleEnum)
-  status?: ScheduleEnum;
+  // @IsEnum(ScheduleEnum)
+  status?: ScheduleEnum[];
 
+  @ValidateIf(obj => obj.scannerEvent)
+  @Equals(undefined, {
+    message:
+      'owner not allowed, only 1 attribute between owner or scannerEvent allowed',
+  })
   @ApiPropertyOptional()
   @IsOptional()
   owner?: string;
@@ -189,4 +203,10 @@ export class EventListDto extends BaseListRequest {
   @IsOptional()
   @Transform(({ value }) => value == 'true')
   scannerEvent: boolean;
+}
+
+export class HighlightManagerDto {
+  @ApiProperty({ type: Boolean })
+  @IsNotEmpty()
+  isHighlighted: boolean;
 }

@@ -8,6 +8,8 @@ import { NftScansModule } from 'modules/nft-scans/nft-scans.module';
 import { MetaEncryptorModule } from '@utils/helpers/meta-encryptor';
 import { User, UserSchema } from '@config/dbs/user.model';
 import { Participant, ParticipantSchema } from '@config/dbs/participant.model';
+import { SocketIoGateway } from 'modules/socketio/socketio.gateway';
+import { SocketIoModule } from 'modules/socketio/socketio.module';
 
 @Module({
   imports: [
@@ -19,6 +21,7 @@ import { Participant, ParticipantSchema } from '@config/dbs/participant.model';
     ]),
     NftScansModule,
     MetaEncryptorModule,
+    SocketIoModule,
   ],
   controllers: [TicketsController],
   providers: [TicketsService],

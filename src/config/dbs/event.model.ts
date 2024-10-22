@@ -5,12 +5,16 @@ import { User } from './user.model';
 import { Schedule, ScheduleSchema } from './schedule.model';
 import { ScheduleEnum, ScheduleTypeEnum } from '@utils/enums';
 import { Collection } from './collection.model';
+import { Ticket } from './ticket.model';
 
 export type EventDocument = HydratedDocument<Event>;
 @Schema({
   timestamps: true,
   validateBeforeSave: true,
   autoIndex: true,
+  toJSON: {
+    virtuals: true,
+  },
 })
 export class Event {
   @Prop({ type: String, required: true })
@@ -85,6 +89,16 @@ export class Event {
 
   @Prop({ type: String, default: ScheduleEnum.UPCOMING })
   status: ScheduleEnum;
+
+  tickets: Ticket[];
 }
 
-export const EventSchema = SchemaFactory.createForClass(Event);
+const EventSchema = SchemaFactory.createForClass(Event);
+
+EventSchema.virtual('tickets', {
+  ref: 'Ticket',
+  localField: '_id',
+  foreignField: 'event',
+});
+
+export { EventSchema };

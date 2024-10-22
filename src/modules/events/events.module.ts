@@ -18,11 +18,13 @@ import {
 } from '@config/dbs/collection.model';
 import { NftScansModule } from 'modules/nft-scans/nft-scans.module';
 import { BullModule } from '@nestjs/bull';
+import { EventAdminController } from './controllers/events-admin.controllet';
+import { AuthModule } from 'modules/auth/auth.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Event.name, schema: EventSchema }]),
     MongooseModule.forFeature([
+      { name: Event.name, schema: EventSchema },
       { name: Collection.name, schema: CollectionSchema },
     ]),
     MongooseModule.forFeature([
@@ -40,8 +42,10 @@ import { BullModule } from '@nestjs/bull';
     SchedulesModule,
     CollectionsModule,
     NftScansModule,
+    AuthModule,
   ],
-  controllers: [EventsController],
+  controllers: [EventsController, EventAdminController],
   providers: [EventsService],
+  exports: [EventsService],
 })
 export class EventsModule {}

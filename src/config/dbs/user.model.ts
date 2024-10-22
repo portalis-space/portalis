@@ -10,21 +10,21 @@ export type UserDocument = HydratedDocument<User>;
   autoIndex: true,
 })
 export class User {
-  @Prop({ unique: true, required: true })
-  chatId: string;
+  @Prop({ type: String })
+  chatId?: string;
 
-  @Prop({ type: String, unique: true, required: true })
-  username: string;
-  @Prop({ type: String, required: true })
-  firstName: string;
-  @Prop({ type: String, required: true })
-  lastName: string;
+  @Prop({ type: String })
+  username?: string;
+  @Prop({ type: String })
+  firstName?: string;
+  @Prop({ type: String })
+  lastName?: string;
 
   @Prop({ unique: true, type: String, required: true })
   userId: string;
 
-  @Prop({ type: [ProfilePicture], default: [] })
-  profilePics?: ProfilePicture[];
+  @Prop({ type: String, default: null })
+  profilePics?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

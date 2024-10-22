@@ -5,12 +5,11 @@ import { SchedulesModule } from 'modules/schedules/schedules.module';
 import { EventSchema, Event } from '@config/dbs/event.model';
 import { MongooseModule } from '@nestjs/mongoose';
 import { EventsProcessor } from './events.processor';
+import { EventsModule } from 'modules/events/events.module';
+import { LoggersModule } from 'modules/loggers/loggers.module';
 
 @Module({
-  imports: [
-    SchedulesModule,
-    MongooseModule.forFeature([{ name: Event.name, schema: EventSchema }]),
-  ],
+  imports: [SchedulesModule, EventsModule, LoggersModule],
   providers: [SchedulesProcessor, EventsProcessor],
 })
 export class ProcessorsModule {}

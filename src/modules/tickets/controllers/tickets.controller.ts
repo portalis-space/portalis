@@ -2,6 +2,9 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
+  Param,
   Post,
   Query,
   UseInterceptors,
@@ -46,6 +49,7 @@ export class TicketsController {
 
   @Post('scan-ticket')
   @UseInterceptors(new ResponseInterceptor('ticket'))
+  @HttpCode(HttpStatus.NO_CONTENT)
   async scanTicket(
     @Body() dto: ScanTicketQrDto,
     @GetCurrentUser('username') username: string,
@@ -60,5 +64,11 @@ export class TicketsController {
     @GetCurrentUser('_id') userId: string,
   ) {
     return this.service.ticketList(dto, userId);
+  }
+
+  @Get(':id')
+  @UseInterceptors(new ResponseInterceptor('ticket'))
+  async detailTicket(@Param('id') id: string) {
+    return this.service.detailTicket(id);
   }
 }

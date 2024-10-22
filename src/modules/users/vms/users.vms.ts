@@ -37,8 +37,7 @@ export class UserVms implements CreateUserDto {
   @Expose()
   userId: string;
   @Expose()
-  @Type(() => ProfilePictureVms)
-  profilePics: ProfilePictureVms[];
+  profilePics: string;
   @Expose()
   firstName: string;
   @Expose()

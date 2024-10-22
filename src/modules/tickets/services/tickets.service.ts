@@ -13,22 +13,25 @@ import {
   ScanTicketQrDto,
 } from '../dtos/tickets.dto';
 import { TicketStatusEnum } from '@utils/enums/ticket.enum';
-import { Collection, EvmCollection } from '@config/dbs/collection.model';
 import { Event } from '@config/dbs/event.model';
 import { Schedule } from '@config/dbs/schedule.model';
 import { ChainsTypeEnum, StatusEnum } from '@utils/enums';
 import { NftScanEvmService } from 'modules/nft-scans/services/nft-scan-evm.service';
 import { NftScanTonService } from 'modules/nft-scans/services/nft-scan-ton.service';
-import { ErcType, EvmChain } from 'nftscan-api';
+import { EvmChain } from 'nftscan-api';
 import { circularToJSON, transformer } from '@utils/helpers';
 import { basePagination } from '@utils/base-class/base.paginate';
 import { TicketVms } from '../vms/tickets.vms';
-import { chains } from 'modules/chains/types/chains.type';
 import { add, getUnixTime } from 'date-fns';
 import { ConfigService } from '@nestjs/config';
 import { MetaEncryptorService } from '@utils/helpers/meta-encryptor/meta-encryptor.service';
 import { User } from '@config/dbs/user.model';
 import { Participant } from '@config/dbs/participant.model';
+import { ValidityCheckTypeEnum } from '@utils/enums/validity.enum';
+import { INftOwnerAmount } from 'modules/nft-scans/interfaces/nft-scans.interface';
+import { WebSocketServer } from '@nestjs/websockets';
+import { Server } from 'socket.io';
+import { SocketIoGateway } from 'modules/socketio/socketio.gateway';
 
 @Injectable()
 export class TicketsService {
@@ -46,11 +49,18 @@ export class TicketsService {
     private readonly nftScanTonService: NftScanTonService,
     private readonly config: ConfigService,
     private readonly enc: MetaEncryptorService,
+    private readonly ioGateway: SocketIoGateway,
   ) {}
+
+  // @WebSocketServer() io: Server;
 
   async createTicket(dto: CreateTicketDto, userId: string) {
     const { contractAddress, event, token, walletAddress, chain, type } = dto;
-    const validityCheck = await this.validiyCheck(dto, userId);
+    const validityCheck = await this.validiyCheck(
+      dto,
+      userId,
+      ValidityCheckTypeEnum.GENERATE_TICKET,
+    );
     if (!validityCheck.valid)
       throw new UnprocessableEntityException(validityCheck.message);
 
@@ -80,8 +90,8 @@ export class TicketsService {
       ...(event && { event: new mongoose.Types.ObjectId(event) }),
     };
     const paginationQ: PipelineStage[] = [
-      { $limit: +pagination.getSize() },
       { $skip: +pagination.getPage() },
+      { $limit: +pagination.getSize() },
     ];
     if (search)
       aggregateQ.push({
@@ -103,11 +113,25 @@ export class TicketsService {
     const populatedTickets = await this.ticketModel.populate(tickets, [
       { path: 'event', populate: { path: 'schedules' } },
       { path: 'owner' },
+      { path: 'scannedBy' },
     ]);
     return {
       count: count.length,
       rows: transformer(TicketVms, circularToJSON(populatedTickets)),
     };
+  }
+
+  async detailTicket(id: string) {
+    const ticket = await this.ticketModel
+      .findOne({
+        _id: new mongoose.Types.ObjectId(id),
+      })
+      .populate([
+        { path: 'event', populate: { path: 'schedules' } },
+        { path: 'owner' },
+        { path: 'scannedBy' },
+      ]);
+    return transformer(TicketVms, circularToJSON(ticket));
   }
 
   async generateQr(dto: CreateTicketQrDto, userId: string) {
@@ -127,6 +151,7 @@ export class TicketsService {
         walletAddress: ticketData.walletAddress,
       },
       ticketData.owner,
+      ValidityCheckTypeEnum.GENERATE_TICKET_QR,
     );
     if (!validityCheck.valid)
       throw new UnprocessableEntityException(validityCheck.message);
@@ -159,7 +184,7 @@ export class TicketsService {
       qrData.split(':');
     const dateNow = getUnixTime(new Date());
     if (dateNow > +expireAt) {
-      throw new UnprocessableEntityException(`Ticket already expired`);
+      throw new UnprocessableEntityException(`Ticket QR already expired`);
     }
     const ticketData = await this.ticketModel.findOne({
       _id: new mongoose.Types.ObjectId(ticketId),
@@ -172,6 +197,10 @@ export class TicketsService {
     ) {
       throw new UnprocessableEntityException('Invalid QR Code, QR malformed');
     }
+    if (ticketData.status != TicketStatusEnum.AVAILABLE)
+      throw new UnprocessableEntityException(
+        'Ticket cant be used, invalid ticket or ticket already used',
+      );
     const validityCheck = await this.validiyCheck(
       {
         chain: ticketData.chain,
@@ -182,6 +211,7 @@ export class TicketsService {
         walletAddress: ticketData.walletAddress,
       },
       ticketData.owner,
+      ValidityCheckTypeEnum.SCAN_TICKET_QR,
       scannerUser,
     );
     if (!validityCheck.valid)
@@ -195,19 +225,28 @@ export class TicketsService {
       ticket: ticketData._id,
       user: ticketData.owner,
     });
-    await Promise.all([
+    const [_ticket, savedParticipant] = await Promise.all([
       this.ticketModel.findOneAndUpdate(
         { _id: ticketData._id },
         { status: TicketStatusEnum.USED, scannedBy: scanner._id },
       ),
-      participant.save({ validateBeforeSave: true }),
+      (await participant.save({ validateBeforeSave: true })).populate([
+        { path: 'user' },
+        { path: 'event' },
+        { path: 'schedule' },
+        { path: 'ticket' },
+      ]),
     ]);
+    this.ioGateway.io.emit(this.enc.encrypt(ticketData.owner.toString()), {
+      participant: savedParticipant,
+    });
   }
 
   private async validiyCheck(
     dto: CreateTicketDto,
     userId: string,
-    scanneUser?: string,
+    validityCheckType: ValidityCheckTypeEnum,
+    scannerUser?: string,
   ) {
     const { contractAddress, event, token, walletAddress, chain, type } = dto;
     const now = new Date();
@@ -224,7 +263,7 @@ export class TicketsService {
         event: new mongoose.Types.ObjectId(event),
         token,
         contractAddress,
-        owner: new mongoose.Types.ObjectId(userId),
+        // owner: new mongoose.Types.ObjectId(userId),
         status: [TicketStatusEnum.AVAILABLE, TicketStatusEnum.USED],
       }),
       this.eventModel.findOne({ _id: new mongoose.Types.ObjectId(event) }),
@@ -233,10 +272,7 @@ export class TicketsService {
       response.message = 'Invalid Event';
       return response;
     }
-    if (scanneUser && eventData.scanners.includes(scanneUser)) {
-      response.message = 'Invalid Scanner';
-      return response;
-    }
+
     const populatedEvent = await this.eventModel.populate(eventData, [
       {
         path: 'schedules',
@@ -246,10 +282,30 @@ export class TicketsService {
         path: 'contractAddresses',
         match: { contract_address: contractAddress },
       },
+      {
+        path: 'owner',
+        // match: { contract_address: contractAddress },
+      },
+      {
+        path: 'tickets',
+      },
     ]);
+    // this.logger.debug(eventData.owner);
+    if (
+      validityCheckType == ValidityCheckTypeEnum.SCAN_TICKET_QR &&
+      !eventData.scanners.includes(scannerUser) &&
+      (eventData.owner as unknown as User).username == scannerUser
+    ) {
+      // this.logger.debug(eventData.scanners, scannerUser);
+      response.message = 'Invalid Scanner';
+      return response;
+    }
     response.event = populatedEvent;
     // this.logger.debug({ populatedEvent });
-    if (populatedEvent.schedules.length < 1) {
+    if (
+      validityCheckType != ValidityCheckTypeEnum.GENERATE_TICKET &&
+      populatedEvent.schedules.length < 1
+    ) {
       response.message = 'Invalid Event Schedule';
       return response;
     }
@@ -258,31 +314,53 @@ export class TicketsService {
     ).find(
       sched =>
         sched.status == StatusEnum.ACTIVE &&
-        sched.startAt >= now &&
-        sched.endAt <= now,
+        sched.startAt <= now &&
+        sched.endAt >= now,
     );
+    // this.logger.debug(populatedEvent.schedules);
+    // this.logger.debug(response.activeSchedule);
     if (populatedEvent.contractAddresses.length < 1) {
       response.message = 'Invalid Contract Address';
       return response;
     }
+    // validate event capacity
+    if (
+      validityCheckType == ValidityCheckTypeEnum.GENERATE_TICKET &&
+      +eventData.tickets.length >= +eventData.capacity
+    ) {
+      response.message = 'Allready full booked';
+      return response;
+    }
     if (type == ChainsTypeEnum.EVM) {
-      const nft = await this.nftScanEvmService.getNft(
+      const nftOwner = await this.nftOwnerCheck(
         chain as unknown as EvmChain,
         contractAddress,
-        token,
+        token.toString(),
+        walletAddress,
+        100,
       );
-      if (!nft || nft.owner != walletAddress) {
+      // testing log
+      // this.logger.debug({ nftOwner });
+      if (!nftOwner) {
         response.message = 'Invalid Nft';
         return response;
       }
-      if (tickets >= +nft.amount) {
+      if (
+        validityCheckType == ValidityCheckTypeEnum.GENERATE_TICKET &&
+        tickets >= +nftOwner.amount
+      ) {
         response.message = 'Nft Already Used';
         return response;
       }
     }
     if (type == ChainsTypeEnum.TON) {
       const nft = await this.nftScanTonService.getSingleNft(token);
-      if (!nft || nft.owner != walletAddress || tickets > 0) {
+      if (
+        !nft ||
+        nft.owner?.toLowerCase() != walletAddress?.toLowerCase() ||
+        (validityCheckType == ValidityCheckTypeEnum.GENERATE_TICKET &&
+          tickets) > 0
+      ) {
         response.message = 'Invalid Nft';
         return response;
       }
@@ -290,5 +368,38 @@ export class TicketsService {
     response.valid = true;
     response.message = 'Valid Request';
     return response;
+  }
+
+  private async nftOwnerCheck(
+    chain: EvmChain,
+    contract: string,
+    tokenId: string,
+    walletAddress: string,
+    limit?: number,
+    cursor?: string,
+  ) {
+    let owner;
+    const nftOwnersResponse = await this.nftScanEvmService.getNftOwner(
+      chain,
+      contract,
+      tokenId,
+      limit,
+      cursor,
+    );
+    owner = nftOwnersResponse.content.find(
+      data => data.account_address.toLowerCase() == walletAddress.toLowerCase(),
+    );
+
+    if (!owner) {
+      owner = await this.nftOwnerCheck(
+        chain,
+        contract,
+        tokenId,
+        walletAddress,
+        limit,
+        nftOwnersResponse.next,
+      );
+    }
+    return owner as INftOwnerAmount;
   }
 }

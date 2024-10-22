@@ -1,0 +1,13 @@
+networks:
+  backend:
+services:
+  portalis:
+    image: portalisspace/portalis-app
+    container_name: portalis
+    ports:
+      - 3000:3000
+      - 3001:3001
+    networks:
+      - backend
+    env_file:
+      - .env

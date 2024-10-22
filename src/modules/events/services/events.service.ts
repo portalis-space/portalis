@@ -5,6 +5,7 @@ import mongoose, { Model, PipelineStage, RootFilterQuery } from 'mongoose';
 import {
   CreateEventDto,
   EventListDto,
+  HighlightManagerDto,
   UpdateEventDto,
 } from '../dtos/events.dto';
 import { circularToJSON, transformer } from '@utils/helpers';
@@ -16,7 +17,7 @@ import { MetaEncryptorService } from '@utils/helpers/meta-encryptor/meta-encrypt
 import { SchedulesService } from 'modules/schedules/services/schedules.service';
 import { CollectionsService } from 'modules/collections/services/collections.service';
 import { Collection } from '@config/dbs/collection.model';
-import { ChainsTypeEnum } from '@utils/enums';
+import { ChainsTypeEnum, ScheduleEnum } from '@utils/enums';
 import { NftScanEvmService } from 'modules/nft-scans/services/nft-scan-evm.service';
 import { NftScanTonService } from 'modules/nft-scans/services/nft-scan-ton.service';
 import { EvmChain } from 'nftscan-api';
@@ -62,7 +63,7 @@ export class EventsService {
       ...constructedDto,
     });
     const event = await newEvent.save({ validateBeforeSave: true });
-
+    this.eventSceduler(event);
     return transformer(BaseViewmodel, circularToJSON(event));
   }
 
@@ -97,7 +98,7 @@ export class EventsService {
             const collection = await this.collection.findOne({
               contract_address: row.contract_address,
             });
-            contractAddress.push(collection._id);
+            if (collection) contractAddress.push(collection._id);
           }),
         );
       } else {
@@ -108,23 +109,26 @@ export class EventsService {
             const collection = await this.collection.findOne({
               contract_address: row.contract_address,
             });
-            contractAddress.push(collection._id);
+            if (collection) contractAddress.push(collection._id);
           }),
         );
       }
     }
+    // this.logger.debug(owner, this.encriptor.decrypt(owner));
     const pagination = new basePagination(page, size);
+    // this.logger.debug(owner);
     let whereQ: RootFilterQuery<Event> = {
       ...(isHighlighted && { isHighlighted }),
       deletedAt: null,
       ...(owner && {
         owner: new mongoose.Types.ObjectId(this.encriptor.decrypt(owner)),
       }),
-      ...(contractAddress.length > 0 && { contractAddresses: contractAddress }),
-      ...(status && { status }),
-      ...(scannerEvent && { scanners: username }),
+      ...(eligibleEvent && { contractAddresses: { $in: contractAddress } }),
+      ...(status && status.length > 0 && { status: { $in: status } }),
+      ...(scannerEvent && { scanners: { $in: [username] } }),
     };
-    this.logger.debug(whereQ);
+
+    // this.logger.debug(whereQ);
     // if (eligibleEvent) {
     //   const eligibleCollection;
     //   const collections = await this.collection.find({ contract_address: [] });
@@ -142,8 +146,8 @@ export class EventsService {
       };
     const aggregateQ: PipelineStage[] = [];
     const paginationQ: PipelineStage[] = [
-      { $limit: +pagination.getSize() },
       { $skip: +pagination.getPage() },
+      { $limit: +pagination.getSize() },
     ];
     if (geoQ) aggregateQ.push(geoQ);
     if (search)
@@ -171,6 +175,7 @@ export class EventsService {
       this.event.aggregate(aggregateQ.concat(paginationQ)),
       this.event.aggregate(aggregateQ),
     ]);
+    // this.logger.debug(events);
     const populatedEvents = await this.event.populate(events, [
       {
         path: 'owner',
@@ -184,12 +189,18 @@ export class EventsService {
     };
   }
 
-  async detail(id: string) {
-    const event = await this.event
-      .findById(id)
-      .populate('owner')
-      .populate('schedules')
-      .populate('contractAddresses');
+  async detail(id: string, userId: string) {
+    const event = await this.event.findById(id).populate([
+      { path: 'owner' },
+      { path: 'schedules' },
+      { path: 'contractAddresses' },
+      {
+        path: 'tickets',
+        match: {
+          owner: new mongoose.Types.ObjectId(userId),
+        },
+      },
+    ]);
     return transformer(EventsVms, circularToJSON(event), {
       groups: ['DETAIL'],
     });
@@ -212,10 +223,30 @@ export class EventsService {
   }
 
   async destroy(id: string, owner: string) {
-    const event = await this.event.findOneAndDelete({
-      _id: new mongoose.Types.ObjectId(id),
-      owner: new mongoose.Types.ObjectId(owner),
-    });
+    const event = await this.event.findOneAndUpdate(
+      {
+        _id: new mongoose.Types.ObjectId(id),
+        owner: new mongoose.Types.ObjectId(owner),
+      },
+      { deletedAt: new Date() },
+    );
+    return transformer(BaseViewmodel, circularToJSON(event));
+  }
+
+  async makeHighligthed(dto: HighlightManagerDto, id: string) {
+    const event = await this.event.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(id) },
+      { isHighlighted: dto.isHighlighted },
+    );
+
+    return transformer(BaseViewmodel, circularToJSON(event));
+  }
+
+  async changeEventState(id: string, status: ScheduleEnum) {
+    const event = await this.event.findOneAndUpdate(
+      { _id: new mongoose.Types.ObjectId(id) },
+      { status: status },
+    );
     return transformer(BaseViewmodel, circularToJSON(event));
   }
 
@@ -237,10 +268,8 @@ export class EventsService {
       ...trimedDto
     } = dto;
 
-    let eventScanners = [username];
-    if (scanners && !scanners.includes(username)) {
-      eventScanners = eventScanners.concat(scanners);
-    }
+    if (scanners && scanners.length > 0 && !scanners.includes(username))
+      scanners.push(username);
     const { utcEndAt, utcStartAt } = this.scheduleService.utcGenerator(
       startDate,
       startTime,
@@ -275,7 +304,7 @@ export class EventsService {
       ...(utcStartAt && { startAt: utcStartAt }),
       ...(utcEndAt && { endAt: utcEndAt }),
       ...(scheduleIds && { schedules: scheduleIds }),
-      scanners: eventScanners,
+      ...(scanners && { scanners }),
     };
 
     return constructedDto;
@@ -290,13 +319,23 @@ export class EventsService {
 
     this.eventQue.add(
       'activate',
-      { id: event._id },
-      { ...(startDelay > 0 && { delay: startDelay }) },
+      { id: event._id.toString() },
+      {
+        ...(startDelay > 0 && {
+          delay: startDelay,
+          jobId: `${event._id.toString()}_activate`,
+        }),
+      },
     );
     this.eventQue.add(
       'deactivate',
-      { id: event._id },
-      { ...(endDelay > 0 && { delay: endDelay }) },
+      { id: event._id.toString() },
+      {
+        ...(endDelay > 0 && {
+          delay: endDelay,
+          jobId: `${event._id.toString()}_deactivate`,
+        }),
+      },
     );
   }
 }
