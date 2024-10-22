@@ -59,9 +59,7 @@ Whether you’re a collector, event organizer, or brand, Portalis lets you:
 
 Jump in, set your NFTs free, and discover the next level of utility in Web 3. 🌐💎
 
-Let’s build the future, Porter by Porter. ⚡
-
-This message brings energy and excitement, leveraging Web 3 slang to connect with users and make the platform feel cutting-edge.`,
+Let’s build the future, Porter by Porter. ⚡`,
         {
           reply_markup: {
             inline_keyboard: [
