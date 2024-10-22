@@ -4,6 +4,7 @@ import { Expose, Transform, Type } from 'class-transformer';
 import { formatInTimeZone } from 'date-fns-tz';
 import { CollectionViewModel } from 'modules/collections/vms/collections.vms';
 import { ScheduleVms } from 'modules/schedules/vms/schedules.vms';
+import { TicketVms } from 'modules/tickets/vms/tickets.vms';
 import { UserVms } from 'modules/users/vms/users.vms';
 
 export class PointVms {
@@ -79,6 +80,11 @@ export class EventsVms extends BaseViewmodel {
   @Expose({ groups: ['DETAIL'] })
   @Type(() => ScheduleVms)
   schedules: ScheduleVms[];
+
+  @ApiProperty()
+  @Expose({ groups: ['DETAIL'] })
+  @Type(() => TicketVms)
+  tickets: TicketVms[];
 
   @ApiProperty()
   @Expose()

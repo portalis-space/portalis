@@ -189,12 +189,18 @@ export class EventsService {
     };
   }
 
-  async detail(id: string) {
-    const event = await this.event
-      .findById(id)
-      .populate('owner')
-      .populate('schedules')
-      .populate('contractAddresses');
+  async detail(id: string, userId: string) {
+    const event = await this.event.findById(id).populate([
+      { path: 'owner' },
+      { path: 'schedules' },
+      { path: 'contractAddresses' },
+      {
+        path: 'tickets',
+        match: {
+          owner: new mongoose.Types.ObjectId(userId),
+        },
+      },
+    ]);
     return transformer(EventsVms, circularToJSON(event), {
       groups: ['DETAIL'],
     });

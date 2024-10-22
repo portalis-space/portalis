@@ -41,18 +41,40 @@ export class TelebotsService implements OnModuleInit {
       // this.logger.debug(userDto);
       const user = await this.userService.createUser(userDto);
       // this.logger.debug(user._id);
-      telebots.sendMessage(msg.chat.id, 'Welcome', {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                web_app: { url: this.FE_LOGIN_URL },
-                text: 'PORTALIS',
-              },
+      telebots.sendMessage(
+        msg.chat.id,
+        `👋 Welcome, fellow Porters! 🚀
+
+You’re now plugged into Portalis, the gateway that lets your NFTs unlock real-world utility. Tired of static NFTs just sitting in your wallet? It’s time to put them to work! 🔑
+
+🔮 What is Portalis?
+Portalis is the portal bridging two worlds—digital and physical. It transforms any NFT into tickets, vouchers, or proof of attendance for IRL and virtual events. Say goodbye to NFTs with no real use case! 💥
+
+💡 How can YOU use Portalis?
+Whether you’re a collector, event organizer, or brand, Portalis lets you:
+
+	1.	Activate your NFTs as real-world access passes.
+	2.	Seamlessly integrate NFTs as vouchers for events.
+	3.	Mint Proof of Attendance for exclusive experiences.
+
+Jump in, set your NFTs free, and discover the next level of utility in Web 3. 🌐💎
+
+Let’s build the future, Porter by Porter. ⚡
+
+This message brings energy and excitement, leveraging Web 3 slang to connect with users and make the platform feel cutting-edge.`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  web_app: { url: this.FE_LOGIN_URL },
+                  text: 'PORTALIS',
+                },
+              ],
             ],
-          ],
+          },
         },
-      });
+      );
     });
   }
 

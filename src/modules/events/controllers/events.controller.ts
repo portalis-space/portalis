@@ -51,8 +51,11 @@ export class EventsController {
 
   @UseInterceptors(new ResponseInterceptor('event'))
   @Get(':id')
-  async getDetail(@Param('id') id: string) {
-    return this.service.detail(id);
+  async getDetail(
+    @Param('id') id: string,
+    @GetCurrentUser('_id') userId: string,
+  ) {
+    return this.service.detail(id, userId);
   }
 
   @UseInterceptors(new ResponseInterceptor('event'))
