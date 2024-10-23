@@ -19,8 +19,10 @@ async function bootstrap() {
   });
   app.setGlobalPrefix(process.env.GLOBAL_PREFIX);
   app.enableCors();
-  const document = SwaggerModule.createDocument(app, ConfigSwagger);
-  SwaggerModule.setup(process.env.GLOBAL_PREFIX, app, document);
+  if (process.env.ENV != 'production') {
+    const document = SwaggerModule.createDocument(app, ConfigSwagger);
+    SwaggerModule.setup(process.env.GLOBAL_PREFIX, app, document);
+  }
   await app.listen(process.env.PORT);
 }
 bootstrap();
